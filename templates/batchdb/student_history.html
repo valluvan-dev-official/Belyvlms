@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% load custom_filter %}
+{% load static %}
+{% block title %}Student Batch History{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/student_form_modern.css' %}">
+<style>
+    .table-wrapper {
+        overflow-x: auto;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 0.75rem;
+        vertical-align: top;
+        border-top: 1px solid #dee2e6;
+    }
+    thead th {
+        vertical-align: bottom;
+        border-bottom: 2px solid #dee2e6;
+        background-color: #f8f9fa;
+    }
+    .form-section-header h5{
+        color: white;
+    }
+    .form-section-header h5 i{
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="student-form-container">
+    <div class="form-header">
+        <h1>Student Batch History</h1>
+        <p class="form-subtitle">History for {{ student.student_id }} - {{ student.first_name }} {% if student.last_name %} {{ student.last_name }} {% else %} {% endif %} - {{ student_data.current_batch.batch_id }}</p>
+    </div>
+
+    <div class="form-section-card">
+        <div class="form-section-header">
+            <h5><i class="fas fa-user-graduate me-2"></i>Student Information</h5>
+        </div>
+        <div class="form-section-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Name:</strong> {{ student.first_name }} {% if student.last_name %} {{ student.last_name }} {% else %}  {% endif %} - {{ student.student_id }}</p>
+                    <p><strong>Email:</strong> {{ student.email }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Phone:</strong> {{ student.phone }}</p>
+                    <p><strong>Enrollment Date:</strong> {{ student.enrollment_date|date:"d-m-Y" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section-card">
+        <div class="form-section-header">
+            <h5><i class="fas fa-layer-group me-2"></i>Current Batches</h5>
+        </div>
+        <div class="form-section-body">
+            <div class="table-wrapper">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Batch ID</th>
+                            <th>Course</th>
+                            <th>Trainer</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Time Slot</th>
+                            <th>Joined On</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if student_data.current_batch %}
+                        <tr>
+                            <td><span class="badge bg-secondary">{{ student_data.current_batch.batch_id }}</span></td>
+                            <td>{{ student_data.current_batch.course }}</td>
+                            <td>{{ student_data.current_batch.trainer }}</td>
+                            <td>{{ student_data.current_batch.activated_at|date:"d-m-Y" }}</td>
+                            <td>{{ student_data.current_batch.deactivated_at|date:"d-m-Y"|default:"-" }}</td>
+                            <td>{{ student_data.current_batch.slot_time|default:"-" }}</td>
+                            <td>{{ student_data.current_batch.activated_at|date:"d-m-Y" }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="fas fa-info-circle me-2"></i>No active batches found.
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section-card">
+        <div class="form-section-header">
+            <h5><i class="fas fa-archive me-2"></i>Previous Batches</h5>
+        </div>
+        <div class="form-section-body">
+            <div class="table-wrapper">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Batch ID</th>
+                            <th>Course</th>
+                            <th>Trainer</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Time Slot</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for batch in student_data.batch_history %}
+                        <tr>
+                            <td><span class="badge bg-secondary">{{ batch.batch_id }}</span></td>
+                            <td>{{ batch.course }}</td>
+                            <td>{{ batch.trainer }}</td>
+                            <td>{{ batch.activated_at|date:"d-m-Y" }}</td>
+                            <td>{{ batch.deactivated_at|date:"d-m-Y" }}</td>
+                            <td>{{ batch.slot_time|default:"-" }}</td>
+                            <td><span class="badge bg-secondary">Inactive</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="fas fa-info-circle me-2"></i>No previous batches found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section-card">
+        <div class="form-section-header">
+            <h5><i class="fas fa-exchange-alt me-2"></i>Transaction History</h5>
+        </div>
+        <div class="form-section-body">
+            <div class="table-wrapper">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Batch ID</th>
+                            <th>Transaction Type</th>
+                            <th>Details</th>
+                            <th>User</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in student_data.transactions %}
+                        <tr>
+                            <td>{{ transaction.timestamp|date:"d-m-Y H:i" }}</td>
+                            <td><span class="badge bg-secondary">{{ transaction.batch.batch_id }}</span></td>
+                            <td>
+                                <span class="badge
+                                    {% if 'ADD' in transaction.get_transaction_type_display %}bg-success
+                                    {% elif 'REMOVE' in transaction.get_transaction_type_display %}bg-danger
+                                    {% elif 'TRANSFER' in transaction.get_transaction_type_display %}bg-warning text-dark
+                                    {% else %}bg-info{% endif %}">
+                                    {{ transaction.get_transaction_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if transaction.details %}
+                                <ul class="list-unstyled mb-0">
+                                    {% for key, value in transaction.details.items %}
+                                    <li><strong>{{ key|title }}:</strong> {{ value }}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>{{ transaction.user.name }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="fas fa-info-circle me-2"></i>No transaction history found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination mt-4">
+                {% if student_data.transactions.has_previous %}
+                    <a href="?student_id={{ student.id }}&page=1" class="btn btn-outline-primary">&laquo; first</a>
+                    <a href="?student_id={{ student.id }}&page={{ student_data.transactions.previous_page_number }}" class="btn btn-outline-primary">previous</a>
+                {% endif %}
+                <span class="current p-2">
+                    Page {{ student_data.transactions.number }} of {{ student_data.transactions.paginator.num_pages }}.
+                </span>
+                {% if student_data.transactions.has_next %}
+                    <a href="?student_id={{ student.id }}&page={{ student_data.transactions.next_page_number }}" class="btn btn-outline-primary">next</a>
+                    <a href="?student_id={{ student.id }}&page={{ student_data.transactions.paginator.num_pages }}" class="btn btn-outline-primary">last &raquo;</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="form-actions">
+        <a href="javascript:history.back()" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back</a>
+    </div>
+</div>
+{% endblock %}

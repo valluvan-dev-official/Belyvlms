@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% load custom_filter %}
+{% block title %}Payment List{% endblock %}
+
+{% block content %}
+<div class="payment-list-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Payment Management</h2>
+        <div class="d-flex gap-3">
+            <div class="card text-white bg-danger mb-3" style="max-width: 18rem;">
+                <div class="card-header">Total Pending Amount</div>
+                <div class="card-body">
+                    <h5 class="card-title">₹{{ total_pending_amount|floatformat:2 }}</h5>
+                </div>
+            </div>
+            {% if date_from and date_to or payment_status %}
+            <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+                <div class="card-header">Filtered Pending Amount</div>
+                <div class="card-body">
+                    <h5 class="card-title">₹{{ filtered_pending_amount|floatformat:2 }}</h5>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="get" class="filters">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="search">Search:</label>
+                <input type="text" id="search" name="search" value="{{ search }}" placeholder="Student ID, Name, Consultant...">
+            </div>
+            <div class="filter-group">
+                <label for="payment_status">Payment Status:</label>
+                <select name="payment_status" id="payment_status">
+                    <option value="">All Statuses</option>
+                    {% for value, label in payment_statuses %}
+                        <option value="{{ value }}" {% if payment_status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="date_from">Pending From:</label>
+                <input type="date" id="date_from" name="date_from" value="{{ date_from }}">
+            </div>
+            <div class="filter-group">
+                <label for="date_to">Pending To:</label>
+                <input type="date" id="date_to" name="date_to" value="{{ date_to }}">
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn-primary">Apply Filters</button>
+            <a href="{% url 'payment_list' %}" class="btn-secondary">Reset</a>
+        </div>
+    </form>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Student Name</th>
+                    <th>Phone</th>
+                    <th>Consultant</th>
+                    <th>Status</th>
+                    <th>Total Fees</th>
+                    <th>Amount Paid</th>
+                    <th>Pending Amount</th>
+                    <th>EMI 1 Details</th>
+                    <th>EMI 2 Details</th>
+                    <th>EMI 3 Details</th>
+                    <th>EMI 4 Details</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr class="status-{{ payment.status|lower }}">
+                    <td><a href="{% url 'student_report' payment.student.student_id %}" class="view-link">{{ payment.student.student_id }}</a></td>
+                    <td>{{ payment.student.first_name }} {{ payment.student.last_name|default:"" }}</td>
+                    <td>{{ payment.student.phone }}</td>
+                    <td>{{ payment.student.consultant.name|default:'N/A' }}</td>
+                    <td>
+                        <span class="status-badge">{{ payment.status }}</span>
+                    </td>
+                    <td>₹{{ payment.total_fees|floatformat:2 }}</td>
+                    <td>₹{{ payment.amount_paid|floatformat:2 }}</td>
+                    <td class="pending-amount">₹{{ payment.total_pending_amount|floatformat:2 }}</td>
+                    
+                    <td class="emi-cell {% if date_from and date_to and payment.emi_1_date|date:'Y-m-d' >= date_from and payment.emi_1_date|date:'Y-m-d' <= date_to %}highlight-cell{% endif %}">
+                        {% if payment.emi_1_amount %}
+                            <div><strong>Due:</strong> ₹{{ payment.emi_1_amount|floatformat:2 }}</div>
+                            <div><strong>Date:</strong> {{ payment.emi_1_date|date:"d M Y" }}</div>
+                            {% with paid=payment.emi_1_paid_amount|default:0 due=payment.emi_1_amount %}
+                            <div class="{% if paid >= due %}highlight-paid{% else %}highlight-pending{% endif %}">
+                                <strong>Paid:</strong> ₹{{ paid|floatformat:2 }}
+                            </div>
+                            {% endwith %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="emi-cell {% if date_from and date_to and payment.emi_2_date|date:'Y-m-d' >= date_from and payment.emi_2_date|date:'Y-m-d' <= date_to %}highlight-cell{% endif %}">
+                        {% if payment.emi_2_amount %}
+                            <div><strong>Due:</strong> ₹{{ payment.emi_2_amount|floatformat:2 }}</div>
+                            <div><strong>Date:</strong> {{ payment.emi_2_date|date:"d M Y" }}</div>
+                            {% with paid=payment.emi_2_paid_amount|default:0 due=payment.emi_2_amount %}
+                            <div class="{% if paid >= due %}highlight-paid{% else %}highlight-pending{% endif %}">
+                                <strong>Paid:</strong> ₹{{ paid|floatformat:2 }}
+                            </div>
+                            {% endwith %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="emi-cell {% if date_from and date_to and payment.emi_3_date|date:'Y-m-d' >= date_from and payment.emi_3_date|date:'Y-m-d' <= date_to %}highlight-cell{% endif %}">
+                        {% if payment.emi_3_amount %}
+                            <div><strong>Due:</strong> ₹{{ payment.emi_3_amount|floatformat:2 }}</div>
+                            <div><strong>Date:</strong> {{ payment.emi_3_date|date:"d M Y" }}</div>
+                            {% with paid=payment.emi_3_paid_amount|default:0 due=payment.emi_3_amount %}
+                            <div class="{% if paid >= due %}highlight-paid{% else %}highlight-pending{% endif %}">
+                                <strong>Paid:</strong> ₹{{ paid|floatformat:2 }}
+                            </div>
+                            {% endwith %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="emi-cell {% if date_from and date_to and payment.emi_4_date|date:'Y-m-d' >= date_from and payment.emi_4_date|date:'Y-m-d' <= date_to %}highlight-cell{% endif %}">
+                        {% if payment.emi_4_amount %}
+                            <div><strong>Due:</strong> ₹{{ payment.emi_4_amount|floatformat:2 }}</div>
+                            <div><strong>Date:</strong> {{ payment.emi_4_date|date:"d M Y" }}</div>
+                            {% with paid=payment.emi_4_paid_amount|default:0 due=payment.emi_4_amount %}
+                            <div class="{% if paid >= due %}highlight-paid{% else %}highlight-pending{% endif %}">
+                                <strong>Paid:</strong> ₹{{ paid|floatformat:2 }}
+                            </div>
+                            {% endwith %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <a href="{% url 'payment_update' payment_id=payment.payment_id %}" class="btn-update">Update</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="13">No payment records found matching your criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination justify-content-center mt-4">
+        <span class="step-links">
+            {% if payments.has_previous %}
+                <a href="?page=1&{{ query_params }}">&laquo; first</a>
+                <a href="?page={{ payments.previous_page_number }}&{{ query_params }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ payments.number }} of {{ payments.paginator.num_pages }}.
+            </span>
+
+            {% if payments.has_next %}
+                <a href="?page={{ payments.next_page_number }}&{{ query_params }}">next</a>
+                <a href="?page={{ payments.paginator.num_pages }}&{{ query_params }}">last &raquo;</a>
+            {% endif %}
+        </span>
+        <form method="get" class="page-search">
+            <input type="number" name="page" min="1" max="{{ payments.paginator.num_pages }}" placeholder="Page">
+            <input type="hidden" name="search" value="{{ request.GET.search }}">
+            <input type="hidden" name="emi_type" value="{{ request.GET.emi_type }}">
+            <input type="hidden" name="payment_status" value="{{ request.GET.payment_status }}">
+            <input type="hidden" name="date_from" value="{{ request.GET.date_from }}">
+            <input type="hidden" name="date_to" value="{{ request.GET.date_to }}">
+            <button type="submit">Go</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

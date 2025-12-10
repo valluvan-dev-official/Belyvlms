@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filter %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/list_pages.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .table {
+        font-size: 0.9rem;
+    }
+    .badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.6em;
+    }
+    .bg-info {
+        background-color: #17a2b8 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-chalkboard-teacher me-2"></i>Trainer List</h2>
+        <a href="{% url 'create_trainer' %}" class="btn-primary">
+            <i class="fas fa-plus me-2"></i>Add New Trainer
+        </a>
+    </div>
+
+    <form method="get" class="filters">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="id_q">Search</label>
+                <input type="text" class="form-control" name="q" id="id_q" placeholder="Name, email, phone" value="{{ query|default:'' }}">
+            </div>
+            <div class="filter-group">
+                <label for="id_stack_filter">Stack</label>
+                <select name="stack" class="form-control" id="id_stack_filter">
+                    <option value="">All Stacks</option>
+                    {% for course in all_courses %}
+                        <option value="{{ course.id }}" {% if course.id|stringformat:"s" == stack_query %}selected{% endif %}>{{ course.course_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="id_location">Location</label>
+                <select name="location" class="form-control" id="id_location">
+                    <option value="">All Locations</option>
+                    {% for value, display in location_choices %}
+                        <option value="{{ value }}" {% if value == location_query %}selected{% endif %}>{{ display }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="id_experience">Experience (years)</label>
+                <input type="number" name="experience" id="id_experience" class="form-control" value="{{ experience_query|default:'' }}" placeholder="Min years">
+            </div>
+        </div>
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="id_availability">Availability</label>
+                <select name="availability" id="id_availability" class="form-control">
+                    <option value="">All</option>
+                    {% for value, display in availability_choices %}
+                        <option value="{{ value }}" {% if value == availability_query %}selected{% endif %}>{{ display }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="id_mode">Mode</label>
+                <select name="mode" id="id_mode" class="form-control">
+                    <option value="">All</option>
+                    {% for value, display in mode_choices %}
+                        <option value="{{ value }}" {% if value == mode_query %}selected{% endif %}>{{ display }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="id_employment">Employment</label>
+                <select name="employment" id="id_employment" class="form-control">
+                    <option value="">All</option>
+                    {% for value, display in employment_choices %}
+                        <option value="{{ value }}" {% if value == employment_query %}selected{% endif %}>{{ display }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="id_is_active">Status</label>
+                <select name="is_active" id="id_is_active" class="form-control">
+                    <option value="">All</option>
+                    <option value="yes" {% if is_active_query == 'yes' %}selected{% endif %}>Active</option>
+                    <option value="no" {% if is_active_query == 'no' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn-primary">Apply Filters</button>
+            <a href="{% url 'trainer_list' %}" class="btn-secondary">Reset</a>
+        </div>
+    </form>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Contact</th>
+                    <th>Email</th>
+                    <th>Location</th>
+                    <th>Experience</th>
+                    <th>Stack</th>
+                    <th>Mode</th>
+                    <th>Availability</th>
+                    <th>Employment</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trainer in trainers %}
+                    <tr class="trainer-row" data-bs-toggle="collapse" data-bs-target="#collapse{{ trainer.pk }}">
+                        <td>
+                            <span class="status-indicator {% if trainer.is_active %}status-active{% else %}status-inactive{% endif %}" style="margin-right: 6%;"></span>
+                            <span class="badge bg-secondary me-3">{{ trainer.trainer_id }}</span>
+                        </td>
+                        <td>{{ trainer.name|default:"-" }}</td>
+                        <td>
+                            {% if trainer.phone_number %}
+                                {{ trainer.country_code }} {{ trainer.phone_number }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ trainer.email|default:"-" }}</td>
+                        <td>
+                            {% if trainer.location == 'Others' %}
+                                {{ trainer.other_location|default:"-" }}
+                            {% else %}
+                                {{ trainer.get_location_display|default:"-" }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if trainer.years_of_experience is not None %}
+                                {{ trainer.years_of_experience }} years
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% for course in trainer.stack.all %}
+                                <span class="badge bg-info">{{ course.course_name }}</span>
+                            {% empty %}
+                                -
+                            {% endfor %}
+                        </td>
+                        <td>{{ trainer.mode_of_delivery|default:"-" }}</td>
+                        <td>{{ trainer.availability|default:"-" }}</td>
+                        <td>{{ trainer.get_employment_type_display|default:"-" }}</td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="{% url 'update_trainer' trainer.pk %}" class="btn-update btn-sm action-btn"><i class="fas fa-edit"></i></a>
+                                 {% if request.user.role == 'admin' %}
+                                <a href="{% url 'delete_trainer' trainer.pk %}" class="btn-danger btn-sm action-btn"><i class="fas fa-trash"></i></a>
+                                 {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="collapse" id="collapse{{ trainer.pk }}">
+                        <td colspan="11">
+                            <div class="p-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Profile:</strong>
+                                        {% if trainer.profile %}
+                                            <a href="{{ trainer.profile.url }}" target="_blank" style="color: #007bff;">View Profile</a>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Demo Link:</strong>
+                                        {% if trainer.demo_link %}
+                                            <a href="{{ trainer.demo_link }}" target="_blank" style="color: #007bff;">View Demo</a>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Mode:</strong> {{ trainer.mode_of_delivery|default:"-" }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Availability:</strong> {{ trainer.availability|default:"-" }}
+                                    </div>
+                                </div>
+                                <hr>
+                                <strong>Timing Slots:</strong>
+                                <ul>
+                                    {% for slot in trainer.timing_slots %}
+                                        <li>{{ slot.start_time|format_time }} - {{ slot.end_time|format_time }} ({{ slot.availability }}) - {{ slot.mode }}</li>
+                                    {% empty %}
+                                        <li>-</li>
+                                    {% endfor %}
+                                </ul>
+                                <hr>
+                                <strong>Commercials:</strong>
+                                <ul>
+                                    {% for commercial in trainer.commercials %}
+                                        <li>
+                                            <strong>{{ commercial.commercial_type|title }}:</strong>
+                                            {% if commercial.commercial_type == 'studentwise' %}
+                                                1st Student: {{ commercial.first_student_payment }}, 2nd Student: {{ commercial.second_student_payment }}
+                                            {% else %}
+                                                {{ commercial.payment }}
+                                            {% endif %}
+                                        </li>
+                                    {% empty %}
+                                        <li>-</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="11" class="text-center py-4 text-muted">
+                            <i class="fas fa-user-slash me-2"></i>No trainers found.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if trainers.has_other_pages %}
+    <div class="pagination justify-content-center mt-4">
+        <ul class="pagination">
+            {% if trainers.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1&{{ query_params }}">&laquo; First</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ trainers.previous_page_number }}&{{ query_params }}">Previous</a></li>
+            {% endif %}
+
+            <li class="page-item disabled"><span class="page-link">Page {{ trainers.number }} of {{ trainers.paginator.num_pages }}</span></li>
+
+            {% if trainers.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ trainers.next_page_number }}&{{ query_params }}">Next</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ trainers.paginator.num_pages }}&{{ query_params }}">Last &raquo;</a></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+<style>
+    .status-indicator {
+        height: 10px;
+        width: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .status-active {
+        background-color: green;
+    }
+    .status-inactive {
+        background-color: red;
+    }
+</style>
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#id_stack_filter').select2({
+        placeholder: "Select a stack",
+        allowClear: true
+    });
+
+    var collapseElements = [].slice.call(document.querySelectorAll('.collapse'));
+    var trainerRows = [].slice.call(document.querySelectorAll('.trainer-row'));
+
+    trainerRows.forEach(function (row) {
+        row.addEventListener('click', function (e) {
+            if (e.target.closest('.action-btn')) {
+                return;
+            }
+
+            var targetId = this.dataset.bsTarget;
+            var targetCollapse = document.querySelector(targetId);
+
+            collapseElements.forEach(function (collapse) {
+                if (collapse !== targetCollapse) {
+                    var bsCollapse = new bootstrap.Collapse(collapse, {
+                        toggle: false
+                    });
+                    bsCollapse.hide();
+                }
+            });
+
+            var bsTargetCollapse = new bootstrap.Collapse(targetCollapse, {
+                toggle: false
+            });
+            bsTargetCollapse.toggle();
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

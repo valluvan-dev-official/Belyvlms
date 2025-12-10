@@ -1,0 +1,472 @@
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filter %}
+
+{% block extra_css %}
+
+<link rel="stylesheet" href="{% static 'css/student_form_modern.css' %}">
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+
+{% endblock %}
+
+{% block title %}Update Company{% endblock %}
+
+{% block content %}
+<div class="student-form-container">
+    <div class="form-header">
+        <h1>Update Company</h1>
+        <p class="form-subtitle">Update the company details</p>
+    </div>
+
+    <form method="post" class="student-form">
+        {% csrf_token %}
+        <div class="form-section-card">
+            <div class="form-section-header">
+                <h5 style="color: white;"><i class="fas fa-building me-2" style="color: white;"></i>Company Details</h5>
+            </div>
+            <div class="form-section-body">
+                <div class="row">
+                    {% for field in form %}
+                    <div class="col-md-6">
+                        <div class="form-group" id="field_{{ field.name }}">
+                            {% if not field.is_hidden %}
+                            <div class="label-form">
+                                {{ field.label_tag }}
+                                {% if field.field.required %}
+                                    <span class="required-indicator">*</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {{ field|attr:"class:form-control" }}
+                            <div class="error-message">
+                                {% if field.errors %}
+                                    {{ field.errors }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Update
+            </button>
+            <a href="{% url 'company_list' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+
+   {% if company.progress == 'resume_shared' %}
+   <div class="form-section-card">
+       <div class="form-section-header">
+           <h5 style="color: white;"><i class="fas fa-file-alt me-2" style="color: white;"></i>Resume Shared Status</h5>
+       </div>
+       <div class="form-section-body">
+        <form method="post" action="{% url 'company_update' company.pk %}" class="mb-3">
+            {% csrf_token %}
+            <div class="form-section-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group" id="field_status">
+                            <div class="label-form">
+                                {{ resume_shared_status_form.status.label_tag }}
+                                {% if resume_shared_status_form.status.field.required %}
+                                    <span class="required-indicator">*</span>
+                                {% endif %}
+                            </div>
+                            {{ resume_shared_status_form.status|attr:"class:form-control" }}
+                            <div class="error-message">
+                                {% if resume_shared_status_form.status.errors %}
+                                    {{ resume_shared_status_form.status.errors }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group" id="field_role">
+                            <div class="label-form">
+                                {{ resume_shared_status_form.role.label_tag }}
+                                {% if resume_shared_status_form.role.field.required %}
+                                    <span class="required-indicator">*</span>
+                                {% endif %}
+                            </div>
+                            {{ resume_shared_status_form.role|attr:"class:form-control,placeholder:Role" }}
+                            <div class="error-message">
+                                {% if resume_shared_status_form.role.errors %}
+                                    {{ resume_shared_status_form.role.errors }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group" id="field_resumes_shared">
+                            <div class="label-form">
+                                {{ resume_shared_status_form.resumes_shared.label_tag }}
+                                {% if resume_shared_status_form.resumes_shared.field.required %}
+                                    <span class="required-indicator">*</span>
+                                {% endif %}
+                            </div>
+                            {{ resume_shared_status_form.resumes_shared|attr:"class:form-control,placeholder:No of Resumes" }}
+                            <div class="error-message">
+                                {% if resume_shared_status_form.resumes_shared.errors %}
+                                    {{ resume_shared_status_form.resumes_shared.errors }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group" id="field_courses">
+                            <div class="label-form">
+                                {{ resume_shared_status_form.courses.label_tag }}
+                                {% if resume_shared_status_form.courses.field.required %}
+                                    <span class="required-indicator">*</span>
+                                {% endif %}
+                            </div>
+                            {{ resume_shared_status_form.courses }}
+                            <div class="error-message">
+                                {% if resume_shared_status_form.courses.errors %}
+                                    {{ resume_shared_status_form.courses.errors }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="col-md-12 mt-2 text-end">
+                    <button type="submit" name="save_resume_status" class="btn btn-primary w-100">
+                        <i class="fas fa-save"></i> Save Status
+                    </button>
+                </div>
+            </div>
+        </form>
+
+
+           {% if company.resume_shared_statuses.all %}
+            <hr>
+            <h6 class="mb-3">Status History</h6>
+            <div class="table-wrapper scroll-container" style="max-height: 200px;">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Role</th>
+                            <th>Course</th>
+                            <th>Resumes Shared</th>
+                            <th>Updated By</th>
+                            <th>Updated Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for status in company.resume_shared_statuses.all %}
+                        <tr>
+                            <td>{{ status.get_status_display }}</td>
+                            <td>{{ status.role }}</td>
+                            <td>{% for course in status.courses.all %}{{ course.course_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+                            <td>{{ status.resumes_shared }}</td>
+                            <td>{{ status.created_by.name }}</td>
+                            <td>{{ status.created_at }}</td>
+                            <td style="text-align: center;">
+                                <a href="{% url 'edit_resume_shared_status' status_pk=status.id %}" class="view-link" ><i class="fas fa-edit"></i></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+           </div>
+            {% endif %}
+       </div>
+   </div>
+   {% endif %}
+
+    <!-- Interview Schedule Modal -->
+    <div class="modal fade" id="scheduleInterviewModal" tabindex="-1" role="dialog" aria-labelledby="scheduleInterviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="scheduleInterviewModalLabel">Schedule Interview</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'company_update' company.pk %}" id="interview-form">
+                        {% csrf_token %}
+                        {{ interview_form.as_p }}
+                        <input type="hidden" name="schedule_interview" value="1">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" form="interview-form" class="btn btn-primary">Schedule</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if company.progress != 'resume_shared' %}
+<div class="form-section-card">
+    <div class="form-section-header">
+        <h5 style="color: white;"><i class="fas fa-calendar-alt me-2" style="color: white;"></i>Scheduled Interviews</h5>
+    </div>
+    <div class="form-section-body">
+        {% regroup interviews by cycle_number as interviews_by_cycle %}
+        {% for cycle in interviews_by_cycle %}
+            {% regroup cycle.list by applying_role as interviews_by_role %}
+            {% for role in interviews_by_role %}
+                <h4> Interview {{ cycle.grouper }} - Role: {{ role.grouper }}</h4>
+                <hr>
+                {% for interview in role.list %}
+                    <h5>Round {{ interview.round_number }} - {{ interview.interview_round|title }}</h5>
+                    <div style="display: flex; justify-content: space-between;">
+                        <p><strong>Date:</strong> {{ interview.interview_date }} | <strong>Time:</strong> {{ interview.interview_time }} | <strong>Location:</strong> {{ interview.location|capfirst }}{% if interview.location == 'others' %} ({{ interview.other_location }}){% endif %} | <strong>Venue:</strong> {{ interview.venue|capfirst }}</p>
+                        <p><strong>Scheduled By:</strong> <strong style="color: #074383;">{{ interview.created_by.name }}</strong> at {{ interview.created_at }}</p>
+                    </div>
+                    <div class="table-wrapper scroll-container">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Status</th>
+                                    <th>Reason for Rejection / Not Attended</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student_status in interview.students_page %}
+                                    <tr>
+                                        <td>{{ student_status.student.student_id }} - {{ student_status.student.first_name }} {{ student_status.student.last_name|default:'' }}</td>
+                                        <td>{{ student_status.get_status_display }}</td>
+                                        <td>{{ student_status.reason|default_if_none:"-" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div class="pagination">
+                            <span class="step-links">
+                                {% if interview.students_page.has_previous %}
+                                    <a href="?page_{{ interview.pk }}={{ interview.students_page.previous_page_number }}">previous</a>
+                                {% endif %}
+                        
+                                <span class="current">
+                                    Page {{ interview.students_page.number }} of {{ interview.students_page.paginator.num_pages }}.
+                                </span>
+                        
+                                {% if interview.students_page.has_next %}
+                                    <a href="?page_{{ interview.pk }}={{ interview.students_page.next_page_number }}">next</a>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                            {% if forloop.last and interview.cycle_number == company.interview_cycles %}
+                            <div class="d-flex justify-content-between mt-2">
+                                <div>
+                                    <a href="{% url 'update_interview_students' interview.pk %}" class="btn btn-secondary btn-sm mx-3 {% if company.progress == 'interview_completed' %}disabled{% endif %}">Update Round</a>
+                                    {% if company.progress != 'interview_completed' %}
+                                    <a href="{% url 'add_interview_round' interview.pk %}" class="btn btn-primary btn-sm">Add Next Round</a>
+                                    {% endif %}
+                                </div>
+                                {% if company.progress != 'interview_completed' %}
+                                <div>
+                                    <a href="{% url 'postpone_interview_round' interview.pk %}" class="btn btn-primary btn-sm ms-2">Postpone Round</a>
+                                    {% if request.user.is_superuser %}
+                                    <a href="{% url 'delete_interview_round' interview.pk %}" class="btn btn-danger btn-sm ms-2">Delete Round</a>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                {% if company.progress == 'interview_completed' and forloop.parentloop.parentloop.last and forloop.parentloop.last and forloop.last %}
+                                <div>
+                                    <a href="{% url 'restart_interview_cycle' company.pk %}" class="btn btn-warning">
+                                        🔄 Add Another Interview Cycle
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <div class="d-flex justify-content-between mt-2">
+                                <div>
+                                    <a href="#" class="btn btn-secondary btn-sm disabled" style="pointer-events: none; background-color: #d3d3d3; border-color: #d3d3d3;">Update Round</a>
+                                    <a href="#" class="btn btn-primary btn-sm disabled" style="pointer-events: none; background-color: #d3d3d3; border-color: #d3d3d3;">Add Next Round</a>
+                                </div>
+                                {% if forloop.last and forloop.parentloop.last and forloop.parentloop.parentloop.last and interview.cycle_number != company.interview_cycles %}
+                                <div>
+                                    <button type="button" class="btn btn-warning" id="add-interview-btn">
+                                        <i class="fas fa-plus"></i> Add Another Interview
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            <hr>
+                {% endfor %}
+            {% endfor %}
+        {% empty %}
+            <div class="mt-2">
+                <button type="button" class="btn btn-primary" id="add-interview-btn">
+                    <i class="fas fa-plus"></i> Add Interview
+                </button>
+            </div>
+        {% endfor %}
+
+    </div>
+</div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      // Show/hide other location field
+      $('#id_location').change(function() {
+        if ($(this).val() === 'others') {
+          $('#id_other_location').closest('p').show();
+        } else {
+          $('#id_other_location').closest('p').hide();
+        }
+      }).trigger('change');
+
+      // Open modal when "Add Interview" button is clicked
+      $('#add-interview-btn').click(function() {
+        $('#scheduleInterviewModal').modal('show');
+      });
+
+      // Initialize Select2 inside the modal AFTER it's shown
+      $('#scheduleInterviewModal').on('shown.bs.modal', function () {
+        $('#id_courses, #id_students').select2({
+            dropdownParent: $('#scheduleInterviewModal')
+        });
+      });
+
+      // Load students based on selected courses
+      $('#id_courses').change(function() {
+        var course_ids = $(this).val();
+        if (course_ids && course_ids.length > 0) {
+            $.ajax({
+                url: '{% url "ajax_load_students" %}',
+                data: {
+                    'course_ids': course_ids.join(',')
+                },
+                success: function(data) {
+                    var studentSelect = $('#id_students');
+                    studentSelect.empty();
+                    $.each(data, function(key, value) {
+                        studentSelect.append($('<option>', {
+                            value: value.id,
+                            text: value.student_name
+                        }));
+                    });
+                    studentSelect.trigger('change');
+                }
+            });
+        } else {
+            $('#id_students').empty().trigger('change');
+        }
+      });
+    });
+  </script>
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const portalSelect = document.getElementById("id_portal");
+    const locationSelect = document.getElementById("id_location");
+    const otherPortalWrapper = document.getElementById("field_other_portal");
+    const otherLocationWrapper = document.getElementById("field_other_location");
+
+
+    function toggleOtherPortal() {
+        if (portalSelect && portalSelect.value === "others") {
+            otherPortalWrapper.style.display = "block";
+        } else {
+            otherPortalWrapper.style.display = "none";
+        }
+    }
+
+    function toggleOtherLocation() {
+        if (locationSelect && locationSelect.value === "others") {
+            otherLocationWrapper.style.display = "block";
+        } else {
+            otherLocationWrapper.style.display = "none";
+        }
+    }
+
+    if (portalSelect) {
+        toggleOtherPortal();
+        portalSelect.addEventListener("change", toggleOtherPortal);
+    }
+    if (locationSelect) {
+        toggleOtherLocation();
+        locationSelect.addEventListener("change", toggleOtherLocation);
+    }
+
+    const interviewLocationSelect = document.querySelector("#scheduleInterviewModal #id_interview-location");
+    const interviewOtherLocationWrapper = document.querySelector("#scheduleInterviewModal #id_interview-other_location").parentElement;
+
+    function toggleInterviewOtherLocation() {
+        if (interviewLocationSelect && interviewLocationSelect.value === "others") {
+            interviewOtherLocationWrapper.style.display = "block";
+        } else {
+            interviewOtherLocationWrapper.style.display = "none";
+        }
+    }
+
+    if (interviewLocationSelect) {
+        toggleInterviewOtherLocation();
+        interviewLocationSelect.addEventListener("change", toggleInterviewOtherLocation);
+    }
+
+    const progressSelect = document.getElementById("id_progress");
+    const reasonWrapper = document.getElementById("field_reason_for_not_conducting");
+
+    function toggleReasonForNotConducting() {
+        if (progressSelect && progressSelect.value === "interview_not_conducted") {
+            reasonWrapper.style.display = "block";
+        } else {
+            reasonWrapper.style.display = "none";
+        }
+    }
+
+    if (progressSelect) {
+        toggleReasonForNotConducting();
+        progressSelect.addEventListener("change", toggleReasonForNotConducting);
+    }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const progressSelect = document.getElementById('id_progress');
+    const reasonField = document.getElementById('field_reason_for_not_conducting');
+
+    function toggleReasonField() {
+        if (progressSelect.value === 'interview_not_conducted') {
+            reasonField.style.display = 'block';
+        } else {
+            reasonField.style.display = 'none';
+        }
+    }
+
+    // Initial check
+    toggleReasonField();
+
+    // Listen for changes
+    progressSelect.addEventListener('change', toggleReasonField);
+});
+</script>
+<script>
+$(document).ready(function() {
+    $('#id_courses').select2({
+        placeholder: "Select courses",
+        allowClear: true
+    });
+});
+</script>
+{% endblock %}

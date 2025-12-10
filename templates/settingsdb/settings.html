@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Settings</h2>
+    <div class="card">
+        <div class="card-header">
+            Database Management
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Delete All Data</h5>
+            <p class="card-text">Permanently delete all data from the database. This action cannot be undone.</p>
+            <a href="{% url 'delete_all_data' %}" class="btn btn-danger">Delete All Data</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

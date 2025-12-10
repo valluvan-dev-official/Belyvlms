@@ -1,0 +1,162 @@
+<style>
+    .sidebar-nav .submenu {
+        list-style-type: none;
+        padding-left: 1.5rem; /* Adjust as needed */
+    }
+    .sidebar-nav .submenu a {
+        margin-top: 10px;
+        font-size: 0.9em; /* Make font smaller */
+        padding: 0.5rem 1.5rem; /* Reduce padding */
+    }
+</style>
+<div class="sidebar-container">
+    <div class="sidebar-header">
+        <h3>Menu</h3>
+        <button id="sidebar-toggle" class="btn-light">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    <ul class="sidebar-nav">
+        {% if user.role == 'admin' %}
+        <li>
+            <a href="{% url 'admin_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i><span>Dashboard</span>
+            </a>
+        </li>
+        {% elif user.role == 'staff' %}
+        <li>
+            <a href="{% url 'staff_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'staff_dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i><span>Dashboard</span>
+            </a>
+        </li>
+        {% elif user.role == 'consultant' %}
+        <li>
+            <a href="{% url 'consultant_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'consultant_dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i><span>Dashboard</span>
+            </a>
+        </li>
+        {% elif user.role == 'trainer' %}
+        <li>
+            <a href="{% url 'trainer_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'trainer_dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i><span>Dashboard</span>
+            </a>
+        </li>
+        {% elif user.role == 'batch_coordination' %}
+        <li>
+            <a href="{% url 'batch_coordination_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'batch_coordination_dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i><span>Dashboard</span>
+            </a>
+        </li>
+        {% elif user.role == 'placement' %}
+        <li>
+            <a href="{% url 'placement_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'placement_dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i><span>Dashboard</span>
+            </a>
+        </li>
+        {% endif %}
+        {% if user.role == 'admin' or user.role == 'staff' or user.role == 'consultant' or user.role == 'batch_coordination' or user.role == 'placement' %}
+        <li>
+            <a href="{% url 'student_list' %}" class="nav-link {% if request.resolver_match.url_name == 'student_list' %}active{% endif %}">
+                <i class="fas fa-book-open"></i><span>Students DB</span>
+            </a>
+        </li>
+        {% endif %}
+        {% if user.role == 'admin' or user.role == 'staff' or user.role == 'placement' %}
+        <li>
+            <a href="{% url 'placementdb:placement_list' %}" class="nav-link {% if request.resolver_match.url_name == 'placement_list' %}active{% endif %}">
+                <i class="fas fa-clipboard-list"></i><span>Placement DB</span>
+            </a>
+        </li>
+        {% endif %}
+        {% if user.role == 'admin' or user.role == 'placement' %}
+        <li>
+            <a href="{% url 'company_list' %}" class="nav-link {% if request.resolver_match.url_name == 'company_list' %}active{% endif %}">
+                <i class="fas fa-bullhorn"></i><span>Placement Resources</span>
+            </a>
+        </li>
+        {% endif %}
+        {% if user.role == 'admin' or user.role == 'staff' or user.role == 'batch_coordination' or user.role == 'trainer' %}
+        <li>
+            <a href="{% url 'batchdb:batch_list' %}" class="nav-link {% if request.resolver_match.url_name == 'batch_list' %}active{% endif %}">
+                <i class="fas fa-calendar-alt"></i><span>Batch</span>
+            </a>
+        </li>
+        {% endif %}
+        {% if user.role == 'admin' or user.role == 'staff' or user.role == 'batch_coordination' %}
+        <li>
+            <a href="{% url 'batchdb:requests_list' %}" class="nav-link {% if request.resolver_match.url_name == 'requests_list' %}active{% endif %}">
+                <i class="fas fa-exchange-alt"></i><span>Approval</span>
+            </a>
+        </li>
+        {% endif %}
+        {% if user.role == 'admin' or user.role == 'staff' or user.role == 'consultant' %}
+        <li>
+            <a href="{% url 'payment_list' %}" class="nav-link {% if request.resolver_match.url_name == 'payment_list' %}active{% endif %}">
+                <i class="fas fa-credit-card"></i><span>Payment</span>
+            </a>
+        </li>
+        {% endif %}
+        {% if user.role == 'admin'%}
+        <li class="nav-item has-submenu">
+            <a href="#" class="nav-link submenu-toggle {% if request.resolver_match.app_name == 'coursedb' %}active{% endif %}" data-bs-toggle="collapse" data-bs-target="#course-submenu" aria-expanded="{% if request.resolver_match.app_name == 'coursedb' %}true{% else %}false{% endif %}" aria-controls="course-submenu">
+                <i class="fas fa-book"></i><span>Courses</span>
+            </a>
+            <ul class="submenu collapse {% if request.resolver_match.app_name == 'coursedb' %}show{% endif %}" id="course-submenu">
+                <li><a href="{% url 'coursedb:course_list' %}" class="nav-link {% if request.resolver_match.url_name == 'course_list' %}active{% endif %}">Course List</a></li>
+                <li><a href="{% url 'coursedb:category_list' %}" class="nav-link {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}">Category List</a></li>
+            </ul>
+        </li>
+        {% endif %}
+        {% if user.role == 'batch_coordination' or user.role == 'trainer' %}
+        <li class="nav-item has-submenu">
+            <a href="#" class="nav-link submenu-toggle {% if request.resolver_match.app_name == 'coursedb' %}active{% endif %}" data-bs-toggle="collapse" data-bs-target="#course-submenu" aria-expanded="{% if request.resolver_match.app_name == 'coursedb' %}true{% else %}false{% endif %}" aria-controls="course-submenu">
+                <i class="fas fa-book"></i><span>Courses</span>
+            </a>
+            <ul class="submenu collapse {% if request.resolver_match.app_name == 'coursedb' %}show{% endif %}" id="course-submenu">
+                <li><a href="{% url 'coursedb:course_list' %}" class="nav-link {% if request.resolver_match.url_name == 'course_list' %}active{% endif %}">Course List</a></li>
+                {% if user.role != 'batch_coordination' and user.role != 'trainer' %}
+                <li><a href="{% url 'coursedb:category_list' %}" class="nav-link {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}">Category List</a></li>
+                {% endif %}
+            </ul>
+        </li>
+        {% endif %}
+        {% if user.role == 'admin' or user.role == 'staff' or user.role == 'batch_coordination' %}
+        <li>
+            <a href="{% url 'trainer_list' %}" class="nav-link {% if request.resolver_match.url_name == 'trainer_list' %}active{% endif %}">
+                <i class="fas fa-chalkboard-teacher"></i><span>Trainers</span>
+            </a>
+        </li>
+        {% endif %}
+        {% if user.role == 'admin' or user.role == 'staff' %}
+        <li>
+            <a href="{% url 'consultant_list' %}" class="nav-link {% if request.resolver_match.url_name == 'consultant_list' %}active{% endif %}">
+                <i class="fas fa-handshake"></i><span>Consultant</span>
+            </a>
+        </li>
+        {% endif %}
+        {% if user.role == 'consultant' %}
+        <li>
+            <a href="{% url 'consultant_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'consultant_profile' %}active{% endif %}">
+                <i class="fas fa-user"></i><span>My Profile</span>
+            </a>
+        </li>
+        {% elif user.role == 'batch_coordination' %}
+        <li>
+            <a href="{% url 'update_user' user.pk %}" class="nav-link {% if request.resolver_match.url_name == 'update_user' %}active{% endif %}">
+                <i class="fas fa-user"></i><span>My Profile</span>
+            </a>
+        </li>
+        {% endif %}
+        <li class="nav-item has-submenu">
+            <a href="#" class="nav-link submenu-toggle {% if request.resolver_match.app_name == 'settingsdb' %}active{% endif %}" data-bs-toggle="collapse" data-bs-target="#settings-submenu" aria-expanded="{% if request.resolver_match.app_name == 'settingsdb' %}true{% else %}false{% endif %}" aria-controls="settings-submenu">
+                <i class="fas fa-cog"></i><span>Settings</span>
+            </a>
+            <ul class="submenu collapse {% if request.resolver_match.app_name == 'settingsdb' %}show{% endif %}" id="settings-submenu">
+                {% if user.role == 'admin' or user.role == 'staff' %}
+                <li><a href="{% url 'settings_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'settings_dashboard' %}active{% endif %}">General</a></li>
+                {% endif %}
+                <li><a href="{% url 'manage_2fa' %}" class="nav-link {% if request.resolver_match.url_name == 'manage_2fa' %}active{% endif %}">Security</a></li>
+            </ul>
+        </li>
+    </ul>
+</div>

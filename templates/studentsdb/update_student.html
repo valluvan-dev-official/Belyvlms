@@ -1,0 +1,549 @@
+{% extends "base.html" %}
+{% block title %}Update Student{% endblock %}
+{% load static country_codes %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/student_form_modern.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<div class="student-form-container">
+    <div class="form-header">
+        <h1>Update Student - {{ student.student_id }}</h1>
+        <p class="form-subtitle">Update the details below</p>
+    </div>
+
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.level_tag }} alert-dismissible fade show" role="alert">
+                    <i class="fas {% if message.level_tag == 'success' %}fa-check-circle{% elif message.level_tag == 'error' %}fa-times-circle{% elif message.level_tag == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="student-form">
+        {% csrf_token %}
+
+        <div class="form-section-card">
+            <div class="form-section-header">
+                <h5 style="color: white;"><i class="fas fa-user me-2" style="color: white;"></i>Student Personal Details</h5>
+            </div>
+            <div class="form-section-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.first_name.label_tag }}
+                                <span class="required-indicator">*</span>
+                            </div>
+                            {{ form.first_name }}
+                            <div class="error-message">{{ form.first_name.errors }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.last_name.label_tag }}
+                            {{ form.last_name }}
+                            <div class="error-message">{{ form.last_name.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.country_code.label_tag }}
+                                <span class="required-indicator">*</span>
+                            </div>
+                            <select id="id_country_code_select" class="form-control country-code-select">
+                                {% get_country_codes as countries %}
+                                {% for code, name, alpha2 in countries %}
+                                    <option value="{{ alpha2 }}" data-code="{{ code }}" {% if form.instance.country_code == code %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                            {{ form.country_code }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.phone.label_tag }}
+                                <span class="required-indicator">*</span>
+                            </div>
+                            {{ form.phone }}
+                            <div class="error-message">{{ form.phone.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.alternative_country_code.label_tag }}
+                            <select id="id_alternative_country_code_select" class="form-control country-code-select">
+                                {% get_country_codes as countries %}
+                                {% for code, name, alpha2 in countries %}
+                                    <option value="{{ alpha2 }}" data-code="{{ code }}" {% if form.instance.alternative_country_code == code %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                            {{ form.alternative_country_code }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.alternative_phone.label_tag }}
+                            {{ form.alternative_phone }}
+                            <div class="error-message">{{ form.alternative_phone.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.email.label_tag }}
+                                <span class="required-indicator">*</span>
+                            </div>
+                            {{ form.email }}
+                            <div class="error-message">{{ form.email.errors }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_district">District<span class="required-indicator">*</span></label>
+                            <select id="id_district" class="form-control"></select>
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="form-group" id="chennai_area_group" style="display: none;">
+                            <label for="id_chennai_area">Area in Chennai<span class="required-indicator">*</span></label>
+                            <select id="id_chennai_area" class="form-control"></select>
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="form-group" id="other_district_group" style="display: none;">
+                            <label for="id_other_district">Other District<span class="required-indicator">*</span></label>
+                            <input type="text" id="id_other_district" class="form-control" placeholder="Enter district">
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            {{ form.location }}
+                            <div class="error-message">{{ form.location.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section-card">
+            <div class="form-section-header">
+                <h5 style="color: white;"><i class="fas fa-graduation-cap me-2" style="color: white;"></i>Education Details</h5>
+            </div>
+            <div class="form-section-body">
+                <div class="form-section-subtitle">Undergraduate</div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.ugdegree.label_tag }}
+                            {{ form.ugdegree }}
+                            <div class="error-message">{{ form.ugdegree.errors }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.ugbranch.label_tag }}
+                            {{ form.ugbranch }}
+                            <div class="error-message">{{ form.ugbranch.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.ugpassout.label_tag }}
+                            {{ form.ugpassout }}
+                            <div class="error-message">{{ form.ugpassout.errors }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.ugpercentage.label_tag }}
+                            {{ form.ugpercentage }}
+                            <div class="error-message">{{ form.ugpercentage.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section-divider"></div>
+
+                <div class="form-section-subtitle">Postgraduate</div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.pgdegree.label_tag }}
+                            {{ form.pgdegree }}
+                            <div class="error-message">{{ form.pgdegree.errors }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.pgbranch.label_tag }}
+                            {{ form.pgbranch }}
+                            <div class="error-message">{{ form.pgbranch.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.pgpassout.label_tag }}
+                            {{ form.pgpassout }}
+                            <div class="error-message">{{ form.pgpassout.errors }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.pgpercentage.label_tag }}
+                            {{ form.pgpercentage }}
+                            <div class="error-message">{{ form.pgpercentage.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section-card">
+            <div class="form-section-header">
+                <h5 style="color: white;"><i class="fas fa-book me-2" style="color: white;"></i>Course Details</h5>
+            </div>
+            <div class="form-section-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.course_category.label_tag }}
+                                <span class="required-indicator">*</span>
+                            </div>
+                            {{ form.course_category }}
+                            <div class="error-message">{{ form.course_category.errors }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.course.label_tag }}
+                                <span class="required-indicator">*</span>
+                            </div>
+                            {{ form.course }}
+                            <div class="error-message">{{ form.course.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.start_date.label_tag }}
+                            {{ form.start_date }}
+                            <div class="error-message">{{ form.start_date.errors }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.end_date.label_tag }}
+                            {{ form.end_date }}
+                            <div class="error-message">{{ form.end_date.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.mode_of_class.label_tag }}
+                                <span class="required-indicator">*</span>
+                            </div>
+                            {{ form.mode_of_class }}
+                            <div class="error-message">{{ form.mode_of_class.errors }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.week_type.label_tag }}
+                                <span class="required-indicator">*</span>
+                            </div>
+                            {{ form.week_type }}
+                            <div class="error-message">{{ form.week_type.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.working_status.label_tag }}
+                            {{ form.working_status }}
+                            <div class="error-message">{{ form.working_status.errors }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6" id="it_experience_group" style="display: none;">
+                        <div class="form-group">
+                            {{ form.it_experience.label_tag }}
+                            {{ form.it_experience }}
+                            <div class="error-message">{{ form.it_experience.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.pl_required.label_tag }}
+                            {{ form.pl_required }}
+                            <div class="error-message">{{ form.pl_required.errors }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.source_of_joining.label_tag }}
+                                <span class="required-indicator">*</span>
+                            </div>
+                            {{ form.source_of_joining }}
+                            <div class="error-message">{{ form.source_of_joining.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.consultant.label_tag }}
+                                <span class="required-indicator">*</span>
+                            </div>
+                            {{ form.consultant }}
+                            <div class="error-message">{{ form.consultant.errors }}</div>
+                        </div>
+                    </div>
+                   <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.course_status.label_tag }}
+                            {{ form.course_status }}
+                            <div class="error-message">{{ form.course_status.errors }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            {{ form.course_percentage.label_tag }}
+                            {{ form.course_percentage }}
+                            <div class="error-message">{{ form.course_percentage.errors }}</div>
+                        </div>
+                    </div>
+                </div>
+                 <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            {{ form.certificate_issued.label_tag }}
+                            {{ form.certificate_issued }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Update Student</button>
+            <a href="{% url 'student_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Initialize select2 on all select elements
+    $('select').select2({
+        width: '100%'
+    });
+
+    const districtSelect = $('#id_district');
+    const chennaiAreaGroup = $('#chennai_area_group');
+    const chennaiAreaSelect = $('#id_chennai_area');
+    const otherDistrictGroup = $('#other_district_group');
+    const otherDistrictInput = $('#id_other_district');
+    const locationInput = $('#id_location');
+
+    const districts = [
+        "Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kallakurichi", "Kanchipuram",
+        "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Mayiladuthurai", "Nagapattinam", "Namakkal", "Nilgiris", "Perambalur", "Pondicherry", "Pudukkottai",
+        "Ramanathapuram", "Ranipet", "Salem", "Sivaganga", "Tenkasi", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli",
+        "Tirupathur", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar", "Others"
+    ];
+
+    const chennaiAreas = [
+        "Adambakkam", "Adyar", "Alandur", "Alapakkam", "Alwarpet", "Alwarthirunagar", "Ambattur", "Aminjikarai", "Anna Nagar", "Annanur", "Arumbakkam", "Ashok Nagar", "Avadi", "Ayanavaram", "Besant Nagar", "Basin Bridge", "Chepauk", "Chetpet", "Chintadripet", "Chitlapakkam", "Choolai", "Choolaimedu", "Chrompet", "Egmore", "Ekkaduthangal", "Eranavur", "Ennore", "Foreshore Estate", "Fort St. George", "George Town", "Gopalapuram", "Government Estate", "Guindy", "Guduvancheri", "IIT Madras", "Injambakkam", "ICF", "Iyyapanthangal", "Jafferkhanpet", "Kattivakkam", "K.K. Nagar", "Keelkattalai", "Kellys", "Kilpauk", "Kodambakkam", "Kodungaiyur", "Kolathur", "Korattur", "Korukkupet", "Kottivakkam", "Kotturpuram", "Kottur", "Kovalam", "Koyambedu", "Kundrathur", "Madhavaram", "Madhavaram Milk Colony", "Madipakkam", "Madambakkam", "Maduravoyal", "Manali", "Manali New Town", "Manapakkam", "Mandaveli", "Mangadu", "Mannady", "Mathur", "Medavakkam", "Meenambakkam", "MGR Nagar", "Minjur", "Mogappair", "MKB Nagar", "Mount Road", "Moolakadai", "Moulivakkam", "Mylapore", "Nandanam", "Nanganallur", "Navalur", "Neelankarai", "Nemilichery", "Nesapakkam", "Nolambur", "Noombal", "Nungambakkam", "Otteri", "Padi", "Pakkam", "Palavakkam", "Pallavaram", "Pallikaranai", "Pammal", "Park Town", "Parrys Corner", "Pattabiram", "Pattaravakkam", "Pazhavanthangal", "Peerkankaranai", "Perambur", "Peravallur", "Perumbakkam", "Perungalathur", "Perungudi", "Poonamallee", "Porur", "Pudupet", "Pulianthope", "Purasaiwalkam", "Puthagaram", "Puzhal", "Puzhuthivakkam", "Raj Bhavan", "Ramavaram", "Redhills", "Royapettah", "Royapuram", "Saidapet", "Saligramam", "Santhome", "Sembakkam", "Selaiyur", "Shenoy Nagar", "Sholavaram", "Sholinganallur", "Sithalapakkam", "Sowcarpet", "St. Thomas Mount", "Tambaram", "Teynampet", "Tharamani", "T. Nagar", "Thirumangalam", "Thirumullaivoyal", "Thiruneermalai", "Thiruninravur", "Thiruvanmiyur", "Thiruverkadu", "Thiruvotriyur", "Thuraipakkam", "Tirusulam", "Tiruvallikeni", "Tondiarpet", "Triplicane", "Ullagaram", "Urapakkam", "Vandalur", "Vadapalani", "Valasaravakkam", "Vallalar Nagar", "Vanagaram", "Velachery", "Velappanchavadi", "Vepery", "Virugambakkam", "Vyasarpadi", "Washermanpet", "West Mambalam"
+    ];
+
+    districtSelect.append('<option value="">Select a district</option>');
+    districts.forEach(d => districtSelect.append(`<option value="${d}">${d}</option>`));
+
+    chennaiAreaSelect.append('<option value="">Select an area</option>');
+    chennaiAreas.forEach(a => chennaiAreaSelect.append(`<option value="${a}">${a}</option>`));
+
+    locationInput.hide();
+
+    function setLocationValue() {
+        const district = districtSelect.val();
+        const chennaiArea = chennaiAreaSelect.val();
+        const otherDistrict = (otherDistrictInput.val() || '').trim();
+        if (district === 'Chennai') {
+            if (chennaiArea) {
+                locationInput.val(chennaiArea + ', ' + district);
+            } else {
+                locationInput.val(district);
+            }
+        } else if (district === 'Others') {
+            locationInput.val(otherDistrict);
+        } else if (district) {
+            locationInput.val(district);
+        } else {
+            locationInput.val('');
+        }
+    }
+
+    districtSelect.on('change', function() {
+        const val = this.value;
+        if (val === 'Chennai') {
+            chennaiAreaGroup.show();
+            otherDistrictGroup.hide();
+            otherDistrictInput.val('');
+        } else if (val === 'Others') {
+            otherDistrictGroup.show();
+            chennaiAreaGroup.hide();
+            chennaiAreaSelect.val('').trigger('change');
+        } else {
+            chennaiAreaGroup.hide();
+            otherDistrictGroup.hide();
+            chennaiAreaSelect.val('').trigger('change');
+            otherDistrictInput.val('');
+        }
+        setLocationValue();
+    });
+
+    otherDistrictInput.on('input', setLocationValue);
+
+    chennaiAreaSelect.on('change', setLocationValue);
+
+    // Pre-fill logic
+    const currentLocation = "{{ form.instance.location|default_if_none:'' }}";
+    if (currentLocation) {
+        const parts = currentLocation.split(',').map(p => p.trim());
+        let district = '';
+        let area = '';
+
+        if (parts.length === 2) {
+            area = parts[0];
+            district = parts[1];
+        } else if (parts.length === 1) {
+            district = parts[0];
+        }
+
+        if (districts.includes(district)) {
+            districtSelect.val(district).trigger('change');
+            if (district === 'Chennai' && chennaiAreas.includes(area)) {
+                chennaiAreaSelect.val(area).trigger('change');
+            }
+        } else {
+            if (chennaiAreas.includes(district)) {
+                districtSelect.val('Chennai').trigger('change');
+                chennaiAreaSelect.val(district).trigger('change');
+            } else {
+                districtSelect.val('Others').trigger('change');
+                otherDistrictInput.val(currentLocation);
+                setLocationValue();
+            }
+        }
+    }
+
+    // Handle working status and IT experience
+    const workingStatusSelect = $('#id_working_status');
+    const itExperienceGroup = $('#it_experience_group');
+
+    function toggleItExperience() {
+        if (workingStatusSelect.val() === 'Yes') {
+            itExperienceGroup.show();
+        } else {
+            itExperienceGroup.hide();
+        }
+    }
+
+    toggleItExperience();
+    workingStatusSelect.on('change', toggleItExperience);
+
+    const categorySelect = $('#id_course_category');
+    const courseSelect = $('#id_course');
+
+    categorySelect.on('change', function() {
+        const categoryId = $(this).val();
+        courseSelect.empty().append('<option value="">Select a course</option>');
+
+        if (categoryId) {
+            $.ajax({
+                url: '{% url "batchdb:get_courses_by_category" %}',
+                data: {
+                    'category_id': categoryId
+                },
+                success: function(data) {
+                    data.forEach(function(course) {
+                        courseSelect.append(`<option value="${course.id}">${course.course_name}</option>`);
+                    });
+                }
+            });
+        }
+    });
+
+    var $countryCodeSelect = $('#id_country_code_select');
+    var $countryCodeHidden = $('#id_country_code');
+
+    $countryCodeSelect.on('change', function() {
+        var selectedOption = $(this).find('option:selected');
+        var countryCode = selectedOption.data('code');
+        $countryCodeHidden.val(countryCode);
+    });
+
+    // Initialize hidden value from current selection
+    var initialSelectedOption = $countryCodeSelect.find('option:selected');
+    if (initialSelectedOption.length) {
+        $countryCodeHidden.val(initialSelectedOption.data('code'));
+    }
+    // If hidden is empty, default to India (+91)
+    if (!$countryCodeHidden.val()) {
+        $countryCodeSelect.val('in').trigger('change');
+        $countryCodeHidden.val('+91');
+    }
+
+    var $altCountryCodeSelect = $('#id_alternative_country_code_select');
+    var $altCountryCodeHidden = $('#id_alternative_country_code');
+
+    $altCountryCodeSelect.on('change', function() {
+        var selectedOption = $(this).find('option:selected');
+        var countryCode = selectedOption.data('code');
+        $altCountryCodeHidden.val(countryCode);
+    });
+
+    // Initialize hidden value from current selection
+    var initialAltSelectedOption = $altCountryCodeSelect.find('option:selected');
+    if (initialAltSelectedOption.length) {
+        $altCountryCodeHidden.val(initialAltSelectedOption.data('code'));
+    }
+    // If hidden is empty, default to India (+91)
+    if (!$altCountryCodeHidden.val()) {
+        $altCountryCodeSelect.val('in').trigger('change');
+        $altCountryCodeHidden.val('+91');
+    }
+});
+</script>
+{% endblock %}

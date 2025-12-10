@@ -1,0 +1,414 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load custom_filter %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+<style>
+    .dashboard-grid .table {
+    width: 100%;                /* Table always fits parent */
+    table-layout: fixed;        /* Prevents auto expansion */
+    word-wrap: break-word;      /* Break long words */
+    white-space: normal;        /* Allow wrapping */
+}
+.dashboard-grid td {
+    max-width: 0;               /* Ensures wrapping works */
+    overflow-wrap: anywhere;    /* Break inside long content */
+}
+.view-link:hover{
+    text-decoration: underline;
+}
+</style>
+{% endblock %}
+
+{% block title %}Placement Dashboard{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <div class="row my-4 ms-1">
+        <div class="col-md-12">
+            <h2>Hey, {{ user.name }}!</h2>
+            <p>Here's an overview of the current placement status.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="stat-card h-100">
+                <div class="stat-header">
+                    <i class="fas fa-users stat-icon"></i>
+                    <h3 class="stat-title">Total Placement Pool</h3>
+                </div>
+                <p class="stat-value">{{ total_placement_pool }}</p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="stat-card h-100">
+                <div class="stat-header">
+                    <i class="fas fa-user-check stat-icon"></i>
+                    <h3 class="stat-title">Total Placed</h3>
+                </div>
+                <p class="stat-value">{{ total_placed }}</p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="stat-card h-100">
+                <div class="stat-header">
+                    <i class="fas fa-chart-line stat-icon"></i>
+                    <h3 class="stat-title">Placement Rate</h3>
+                </div>
+                <p class="stat-value">{{ placement_rate }}%</p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="stat-card h-100">
+                <div class="stat-header">
+                    <i class="fas fa-search stat-icon"></i>
+                    <h3 class="stat-title">Actively Seeking</h3>
+                </div>
+                <p class="stat-value">{{ actively_seeking }}
+                    <span class="stat-breakdown">
+                        C: {{ actively_seeking_completed }} | IP: {{ actively_seeking_in_progress }} | Y: {{ actively_seeking_yts }}
+                    </span>
+                </p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="stat-card h-100">
+                <div class="stat-header">
+                    <i class="fas fa-building stat-icon"></i>
+                    <h3 class="stat-title">Active Resources</h3>
+                </div>
+                <p class="stat-value">{{ active_drives_count }}</p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="stat-card h-100">
+                <div class="stat-header">
+                    <i class="fas fa-calendar-check stat-icon"></i>
+                    <h3 class="stat-title">Interview Scheduling in Progress</h3>
+                </div>
+                <p class="stat-value">{{ interviews_scheduled }}
+                    <span class="stat-breakdown">
+                        Completed: {{ interviews_completed }}
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="stat-card h-100">
+                <div class="stat-header">
+                    <i class="fas fa-microphone-alt stat-icon"></i>
+                    <h3 class="stat-title">Mock Interviews Completed</h3>
+                </div>
+                <p class="stat-value">{{ mock_interviews_completed }}</p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="stat-card h-100">
+                <div class="stat-header">
+                    <i class="fas fa-chalkboard-teacher stat-icon"></i>
+                    <h3 class="stat-title">Placement Sessions Completed</h3>
+                </div>
+                <p class="stat-value">{{ placement_sessions_completed }}</p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="stat-card h-100">
+                <div class="stat-header">
+                    <i class="fas fa-certificate stat-icon"></i>
+                    <h3 class="stat-title">Certificates Issued</h3>
+                </div>
+                <p class="stat-value">{{ certificates_issued }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="stat-card h-100">
+                <div class="stat-header">
+                    <i class="fas fa-phone-alt stat-icon"></i>
+                    <h3 class="stat-title">Onboarding Call Done</h3>
+                </div>
+                <p class="stat-value">{{ onboarding_call_done_count }}</p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="stat-card h-100">
+                <div class="stat-header">
+                    <i class="fas fa-question-circle stat-icon"></i>
+                    <h3 class="stat-title">Interview Questions Shared</h3>
+                </div>
+                <p class="stat-value">{{ interview_questions_shared_count }}</p>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="stat-card h-100">
+                <div class="stat-header">
+                    <i class="fas fa-file-word stat-icon"></i>
+                    <h3 class="stat-title">Resume Templates Shared</h3>
+                </div>
+                <p class="stat-value">{{ resume_templates_shared_count }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-card mt-4">
+        <div class="info-header">
+            <h4 class="info-title"><i class="fas fa-share-alt"></i> Resume Shared Status</h4>
+        </div>
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <i class="fas fa-share-alt stat-icon"></i>
+                    <h3 class="stat-title">Total Shared</h3>
+                </div>
+                <p class="stat-value">{{ total_resume_shared }}</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <i class="fas fa-briefcase stat-icon" style="color: #27ae60;"></i>
+                    <h3 class="stat-title">Moved to Interview</h3>
+                </div>
+                <p class="stat-value">{{ moved_to_interview_count }}</p>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <i class="fas fa-hourglass-half stat-icon" style="color: #3498db;"></i>
+                    <h3 class="stat-title">Pending</h3>
+                </div>
+                <p class="stat-value">{{ pending_count }}</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <i class="fas fa-times-circle stat-icon" style="color: #e74c3c;"></i>
+                    <h3 class="stat-title">Position Closed</h3>
+                </div>
+                <p class="stat-value">{{ position_closed_count }}</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <i class="fas fa-user-times stat-icon" style="color: #f39c12;"></i>
+                    <h3 class="stat-title">Not Shortlisted</h3>
+                </div>
+                <p class="stat-value">{{ not_shortlisted_count }}</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <i class="fas fa-bell-slash stat-icon" style="color: #95a5a6;"></i>
+                    <h3 class="stat-title">No Response</h3>
+                </div>
+                <p class="stat-value">{{ no_response_count }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="info-card mt-4">
+        <div class="info-header">
+            <h4 class="info-title"><i class="fas fa-file-alt"></i> Resumes Yet to Collect</h4>
+        </div>
+        <div class="stats-overview">
+            <a href="{% url 'placementdb:pending_resumes_list' %}" class="stat-card" style="flex-grow: 0; min-width: 200px; text-decoration: none; color: inherit;">
+                <div class="stat-header">
+                    <i class="fas fa-file-alt stat-icon"></i>
+                    <h3 class="stat-title">Total to Collect</h3>
+                </div>
+                <p class="stat-value">{{ resumes_to_collect_count }}</p>
+            </a>
+            <div class="stat-card clickable-stat" data-table-id="completed-table" style="cursor: pointer;">
+                <div class="stat-header">
+                    <i class="fas fa-check-circle stat-icon" style="color: #2ecc71;"></i>
+                    <h3 class="stat-title">Completed</h3>
+                </div>
+                <p class="stat-value">{{ completed_but_no_resume }}</p>
+            </div>
+            <div class="stat-card clickable-stat" data-table-id="progress-80-99-table" style="cursor: pointer;">
+                <div class="stat-header">
+                    <i class="fas fa-tasks stat-icon" style="color: #f1c40f;"></i>
+                    <h3 class="stat-title">80-99% Progress</h3>
+                </div>
+                <p class="stat-value">{{ in_progress_80_99_no_resume }}</p>
+            </div>
+            <div class="stat-card clickable-stat" data-table-id="progress-50-80-table" style="cursor: pointer;">
+                <div class="stat-header">
+                    <i class="fas fa-tasks stat-icon" style="color: #f1c40f;"></i>
+                    <h3 class="stat-title">50-80% Progress</h3>
+                </div>
+                <p class="stat-value">{{ in_progress_50_80_no_resume }}</p>
+            </div>
+            <div class="stat-card clickable-stat" data-table-id="progress-below-50-table" style="cursor: pointer;">
+                <div class="stat-header">
+                    <i class="fas fa-spinner stat-icon" style="color: #3498db;"></i>
+                    <h3 class="stat-title">50% Progress</h3>
+                </div>
+                <p class="stat-value">{{ in_progress_below_50_no_resume }}</p>
+            </div>
+            <div class="stat-card clickable-stat" data-table-id="yts-table" style="cursor: pointer;">
+                <div class="stat-header">
+                    <i class="fas fa-hourglass-start stat-icon" style="color: #95a5a6;"></i>
+                    <h3 class="stat-title">Yet to Start</h3>
+                </div>
+                <p class="stat-value">{{ yts_no_resume }}</p>
+            </div>
+        </div>
+    </div>
+
+    {% with students=completed_list_paginated table_id="completed-table" title="Completed - Pending Resume" page_param="completed_page" %}
+        {% include "includes/student_resume_table.html" %}
+    {% endwith %}
+    {% with students=progress_80_99_list_paginated table_id="progress-80-99-table" title="80-99% Progress - Pending Resume" page_param="progress_80_99_page" %}
+        {% include "includes/student_resume_table.html" %}
+    {% endwith %}
+    {% with students=progress_50_80_list_paginated table_id="progress-50-80-table" title="50-80% Progress - Pending Resume" page_param="progress_50_80_page" %}
+        {% include "includes/student_resume_table.html" %}
+    {% endwith %}
+    {% with students=progress_below_50_list_paginated table_id="progress-below-50-table" title="<50% Progress - Pending Resume" page_param="progress_below_50_page" %}
+        {% include "includes/student_resume_table.html" %}
+    {% endwith %}
+    {% with students=yts_list_paginated table_id="yts-table" title="Yet to Start - Pending Resume" page_param="yts_page" %}
+        {% include "includes/student_resume_table.html" %}
+    {% endwith %}
+
+    <div class="dashboard-grid mt-4">
+        <div class="info-card">
+            <div class="info-header">
+                <h4 class="info-title"><i class="fas fa-calendar-alt"></i> Upcoming Interviews</h4>
+                <a href="{% url 'interview_list' %}" class="view-all">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <tbody>
+                        {% for interview in upcoming_interviews %}
+                        <tr>
+                            <td>
+                                <strong>{{ interview.company.company_name }}</strong> - Round {{ interview.round_number }} ({{ interview.get_interview_round_display }})
+                                <br>
+                                <small class="text-muted">{{ interview.interview_date|date:"d M Y" }} at {{ interview.interview_time|time:"H:i A" }} for
+                                    <span>
+                                    {% for course in interview.courses.all %}
+                                        {{ course.course_name }}{% if not forloop.last %}, {% endif %}
+                                    {% empty %}-{% endfor %}
+                                    </span>
+                                </small>
+                            </td>
+                            <td>
+                                {% for student_status in interview.student_status.all %}
+                                    <a href="/placements/?q={{ student_status.student.student_id }}" class="view-link">
+                                        {{ student_status.student.student_id }}
+                                    </a>
+                                    {% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    <span class="text-muted">No students assigned yet.</span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="no-data">No upcoming interviews.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-header">
+                <h4 class="info-title"><i class="fas fa-user-clock"></i> Students Yet to be Placed</h4>
+                <a href="#" class="view-all">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <tbody>
+                        {% for placement in students_yet_to_be_placed %}
+                        <tr>
+                            <td>{{ placement.student.first_name }} {{ placement.student.last_name|default:"" }}</td>
+                            <td>{{ placement.student.get_course_status_display }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="no-data">No students are currently seeking placement.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-card mt-4">
+        <div class="info-header">
+            <h4 class="info-title"><i class="fas fa-user-graduate"></i> Recently Placed Students</h4>
+            <a href="#" class="view-all">View All</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <tbody>
+                    {% for student in recently_placed %}
+                    <tr>
+                        <td>{{ student.first_name }} {{ student.last_name|default:"" }}🏆</td>
+                        <td>{{ courses_dict|get_item:student.course_id|default:"-" }}</td>
+                        <td>{{ student.end_date|date:"d M Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="no-data">No students have been placed recently.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const clickableStats = document.querySelectorAll('.clickable-stat');
+    const tables = document.querySelectorAll('.student-resume-table');
+
+    // Function to show a table and hide others
+    function showTable(tableId) {
+        tables.forEach(t => {
+            t.style.display = t.id === tableId ? 'block' : 'none';
+        });
+    }
+
+    // Check for page parameters on load to show the correct table
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageParams = ['completed_page', 'progress_80_99_page', 'progress_50_80_page', 'progress_below_50_page', 'yts_page'];
+    let activeTableId = null;
+
+    pageParams.forEach(param => {
+        if (urlParams.has(param)) {
+            switch(param) {
+                case 'completed_page': activeTableId = 'completed-table'; break;
+                case 'progress_80_99_page': activeTableId = 'progress-80-99-table'; break;
+                case 'progress_50_80_page': activeTableId = 'progress-50-80-table'; break;
+                case 'progress_below_50_page': activeTableId = 'progress-below-50-table'; break;
+                case 'yts_page': activeTableId = 'yts-table'; break;
+            }
+        }
+    });
+
+    if (activeTableId) {
+        showTable(activeTableId);
+    }
+
+    // Add click listeners to stat cards
+    clickableStats.forEach(stat => {
+        stat.addEventListener('click', function() {
+            const tableId = this.dataset.tableId;
+            const table = document.getElementById(tableId);
+            
+            if (table.style.display === 'none' || table.style.display === '') {
+                showTable(tableId);
+            } else {
+                table.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

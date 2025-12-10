@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Update User{% endblock %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/user_form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="user-form-container">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-section-card">
+            <div class="form-section-header">
+                <i class="fas fa-user-edit"></i>
+                <h3>Update User: {{ user.name }}</h3>
+            </div>
+
+            <div class="form-group">
+                {{ form.name.label_tag }}
+                {{ form.name }}
+            </div>
+
+            <div class="form-group">
+                {{ form.email.label_tag }}
+                {{ form.email }}
+            </div>
+
+            {% if not is_editing_own_profile %}
+            <div class="form-group">
+                {{ form.role.label_tag }}
+                {{ form.role }}
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                {{ form.profile_picture.label_tag }}
+                {% if user.profile_picture %}
+                    <div class="current-profile-picture">
+                        <img src="{{ user.profile_picture.url }}" alt="Current profile picture" style="max-width: 150px; max-height: 150px; border-radius: 50%;">
+                        <p>Current picture</p>
+                    </div>
+                {% endif %}
+                <div class="custom-file-input">
+                    {{ form.profile_picture }}
+                    <label class="custom-file-label" for="{{ form.profile_picture.id_for_label }}">
+                        <i class="fas fa-cloud-upload-alt"></i> Choose a new profile picture
+                    </label>
+                </div>
+            </div>
+
+            <div id="consultant_div" class="form-group hidden">
+                {{ form.consultant.label_tag }}
+                {{ form.consultant }}
+            </div>
+
+            {% if request.user.pk != user.pk or not request.user.is_superuser %}
+            <div id="permissions_div" class="hidden">
+                <div class="form-group">
+                    <label class="form-check-label">
+                        {{ form.is_staff }} Staff status
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-check-label">
+                        {{ form.is_superuser }} Superuser status
+                    </label>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Update User
+            </button>
+            <a href="javascript:history.back()" class="btn btn-secondary">
+                <i class="fas fa-times-circle"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('id_role');
+    const permissionsDiv = document.getElementById('permissions_div');
+    const consultantDiv = document.getElementById('consultant_div');
+
+    // Add form-control class to all input, select, and textarea elements
+    const formElements = document.querySelectorAll('input, select, textarea');
+    formElements.forEach(el => {
+        if (el.type !== 'checkbox' && el.type !== 'file') {
+            el.classList.add('form-control');
+        }
+    });
+
+    function toggleFields() {
+        if (roleSelect.value === 'admin') {
+            permissionsDiv.classList.remove('hidden');
+        } else {
+            permissionsDiv.classList.add('hidden');
+        }
+
+        if (roleSelect.value === 'consultant') {
+            consultantDiv.classList.remove('hidden');
+        } else {
+            consultantDiv.classList.add('hidden');
+        }
+    }
+
+    roleSelect.addEventListener('change', toggleFields);
+    toggleFields(); // Initial check
+});
+</script>
+{% endblock %}

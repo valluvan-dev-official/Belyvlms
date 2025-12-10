@@ -1,0 +1,442 @@
+{% extends "base.html" %}
+{% load core_tags student_tags payment_tags %}
+{% block title %}Student Report{% endblock %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/student_report.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="student-report-container">
+    <!-- Header Section -->
+    <div class="sr-header">
+        <div class="sr-institute-info">
+            <div class="sr-logo">
+                <img src="{% static 'images/logo.png' %}" alt="Institute Logo">
+                <span>{{ request.site_settings.site_name|default:"BTree Systems" }}</span>
+            </div>
+        </div>
+        
+        <div class="sr-student-info">
+            <h1>Student - {{ student.student_id }}</h1>
+            <div class="sr-language-selector">
+                <div class="sr-actions">
+                    <a href="#" class="sr-download-btn" download="student-report.png" title="Download as Image" style="text-decoration: none; color: inherit;">
+                        <i class="fas fa-download"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="sr-content">
+        <!-- Profile Section -->
+        <div class="sr-card">
+            <div class="sr-card-header">Profile</div>
+            <div class="sr-card-body">
+                <div class="sr-profile-content">
+                    <div class="sr-profile-photo">
+                        {% if placement.std_professional_photo %}
+                            <img src="{{ placement.std_professional_photo.url }}" alt="Student Photo">
+                        {% else %}
+                            <div class="sr-profile-placeholder">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="sr-name">
+                        <h2>{{ student.first_name|capfirst }} {{ student.last_name|default:''|capfirst }}</h2>
+                    </div>
+                    <div class="sr-profile-details">
+                        <div class="sr-detail-item">
+                            <i class="fas fa-phone"></i>
+                            <span>Phone:</span>
+                            <span class="sr-detail-value">{{ student.country_code }} {{ student.phone }}</span>
+                        </div>
+                        <div class="sr-detail-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>Email:</span>
+                            <span class="sr-detail-value">{{ student.email }}</span>
+                        </div>
+                        <div class="sr-detail-item">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Date of joining:</span>
+                            <span class="sr-detail-value">{{ student.enrollment_date|date:"d-m-Y" }}</span>
+                        </div>
+                        <div class="sr-detail-item">
+                            <i class="fas fa-clock"></i>
+                            <span>Status:</span>
+                            <span class="sr-detail-value">{{ student.get_course_status_display|default:"N/A" }}</span>
+                        </div>
+                        <div class="sr-detail-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Location:</span>  
+                            <span class="sr-detail-value">{{ student.location|default:"Not provided" }}</span>
+                        </div>
+                        <div class="sr-detail-item">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>UG Degree:</span>
+                            {% if student.ugdegree %}
+                                <span class="sr-detail-value">
+                                    {{ student.ugdegree }} in {{ student.ugbranch|default:"-" }} ({{ student.ugpassout|default:"-" }})
+                                </span>
+                            {% else %}
+                                <span class="sr-detail-value">-</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="sr-detail-item">
+                            <i class="fas fa-user-graduate"></i>
+                            <span>PG Degree:</span>
+                            {% if student.pgdegree %}
+                                <span class="sr-detail-value">
+                                    {{ student.pgdegree }} in {{ student.pgbranch|default:"-" }} ({{ student.pgpassout|default:"-" }})
+                                </span>
+                            {% else %}
+                                <span class="sr-detail-value">-</span>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+                <div class="sr-profile-actions">
+                    <button class="sr-edit-profile-btn">
+                       <a href="{% url 'update_student' student.student_id %}" class="view-link"><i class="fas fa-edit"></i> Edit Profile</a>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Additional Sections -->
+        <div class="sr-card">
+            <div class="sr-card-header">Course Details</div>
+            <div class="sr-card-body">
+                <div class="sr-detail-grid">
+                    <div class="sr-detail-item">
+                        <span class="sr-detail-label">Course:</span>
+                        <span class="sr-detail-value">{{ student.course.course_name }}</span>
+                    </div>
+                    <div class="sr-detail-item">
+                        <span class="sr-detail-label">Trainer:</span>
+                        <span class="sr-detail-value">{{ trainer.name|default:"N/A" }}</span>
+                    </div>
+                    <div class="sr-detail-item">
+                        <span class="sr-detail-label">Course Percentage:</span>
+                        <span class="sr-detail-value">{{ student.course_percentage|default:"0.0" }}</span>
+                    </div>
+                    <div class="sr-detail-item">
+                        <span class="sr-detail-label">Status:</span>
+                        <span class="sr-detail-value">{{ student.get_course_status_display }}</span>
+                    </div>
+                    <div class="sr-detail-item">
+                        <span class="sr-detail-label">Start Date:</span>
+                        <span class="sr-detail-value">{{ student.start_date|date:"d-m-Y" }}</span>
+                    </div>
+                    <div class="sr-detail-item">
+                        <span class="sr-detail-label">End Date:</span>
+                        <span class="sr-detail-value">{{ student.end_date|date:"d-m-Y" }}</span>
+                    </div>
+                    <div class="sr-detail-item">
+                        <span class="sr-detail-label">Mode of Class:</span>
+                        <span class="sr-detail-value">{{ student.get_mode_of_class_display }}</span>
+                    </div>
+                    <div class="sr-detail-item">
+                        <span class="sr-detail-label">Week Type:</span>
+                        <span class="sr-detail-value">{{ student.get_week_type_display }}</span>
+                    </div>
+                    <div class="sr-detail-item">
+                        <span class="sr-detail-label">Consultant:</span>
+                        <span class="sr-detail-value">{{ student.consultant.name|default:"N/A" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sr-card">
+            <div class="sr-card-header">Batch History</div>
+            <div class="sr-card-body">
+                {% if batch_history.current_batch %}
+                <div class="sr-batch-section">
+                    <h3>Current Batch</h3>
+                    <div class="sr-batch-item">
+                       <span class="sr-batch-id"><a href="{% url 'batchdb:batch_report' batch_history.current_batch.pk %}" class="view-link">{{ batch_history.current_batch.batch_id }}</a></span>
+                        <span class="sr-batch-course">{{ batch_history.current_batch.course }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="sr-batch-section">
+                    <h3>Previous Batches</h3>
+                    <div class="sr-batch-list">
+                        {% for batch in batch_history.batch_history %}
+                        <div class="sr-batch-item">
+                            <span class="sr-batch-id">
+                                <a href="{% url 'batchdb:batch_report' batch.pk %}" class="view-link">
+                                    {{ batch.batch_id }}
+                                </a>
+                            </span>
+                            <span class="sr-batch-course">{{ batch.course }}</span>
+                        </div>
+                        {% empty %}
+                        <p>No previous batches</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sr-card">
+            <div class="sr-card-header">Placement Details</div>
+            <div class="sr-card-body">
+                {% if placement %}
+                <div class="sr-placement-details">
+                    <div class="sr-placement-item">
+                        <span class="sr-placement-label">Resume:</span>
+                        {% if placement.resume_link %}
+                        <a href="{{ placement.resume_link.url }}" target="_blank" class="sr-resume-link">
+                            <i class="fas fa-file-pdf"></i> View Resume
+                        </a>
+                        {% else %}
+                        <span class="sr-placement-status sr-status-pending">Not Uploaded</span>
+                        {% endif %}
+                    </div>
+                    <div class="sr-placement-item">
+                        <span class="sr-placement-label">Onboarding Call:</span>
+                        <span class="sr-placement-status {% if student.onboardingcalldone %}sr-status-complete{% else %}sr-status-pending{% endif %}">
+                            {{ student.onboardingcalldone|yesno:"Completed,Pending" }}
+                        </span>
+                    </div>
+                    <div class="sr-placement-item">
+                        <span class="sr-placement-label">Placement Session:</span>
+                        <span class="sr-placement-status {% if student.placement_session_completed %}sr-status-complete{% else %}sr-status-pending{% endif %}">
+                            {{ student.placement_session_completed|yesno:"Completed,Pending" }}
+                        </span>
+                    </div>
+                    <div class="sr-placement-item">
+                        <span class="sr-placement-label">Interview Questions:</span>
+                        <span class="sr-placement-status {% if student.interviewquestion_shared %}sr-status-complete{% else %}sr-status-pending{% endif %}">
+                            {{ student.interviewquestion_shared|yesno:"Shared,Not Shared" }}
+                        </span>
+                    </div>
+                    <div class="sr-placement-item">
+                        <span class="sr-placement-label">ResumeTemplates:</span>
+                        <span class="sr-placement-status {% if student.resume_template_shared %}sr-status-complete{% else %}sr-status-pending{% endif %}">
+                            {{ student.resume_template_shared|yesno:"Shared,Not Shared" }}
+                        </span>
+                    </div>
+                    <div class="sr-placement-item">
+                        <span class="sr-placement-label">Mock Interview:</span>
+                        <span class="sr-placement-status {% if student.mock_interview_completed %}sr-status-complete{% else %}sr-status-pending{% endif %}">
+                            {{ student.mock_interview_completed|yesno:"Completed,Pending" }}
+                        </span>
+                    </div>
+                    <div class="sr-placement-item">
+                        <span class="sr-placement-label">Placed:</span>
+                        <span class="sr-placement-status {% if student.get_course_status_display == 'Placed' %}sr-status-complete{% else %}sr-status-pending{% endif %}">
+                             {% if student.get_course_status_display == 'Placed' %} Yes {% else %} No {% endif %}
+                        </span>
+                    </div>
+                    {% if placed_interview_status %}
+                    <div class="sr-placement-item">
+                        <span class="sr-placement-label">Company:</span>
+                        <span class="sr-detail-value">{{ placed_interview_status.interview.company.company_name }}</span>
+                    </div>
+                    <div class="sr-placement-item">
+                        <span class="sr-placement-label">Placed Date:</span>
+                        <span class="sr-detail-value">{{ placed_interview_status.interview.interview_date|date:"d-m-Y" }}</span>
+                    </div>
+                    <div class="sr-placement-item">
+                        <span class="sr-placement-label">Offer Letter:</span>
+                        {% if placed_interview_status.offer_letter %}
+                        <a href="{{ placed_interview_status.offer_letter.url }}" target="_blank" class="sr-resume-link">
+                            <i class="fas fa-file-pdf"></i> View Offer Letter
+                        </a>
+                        {% else %}
+                        <span class="sr-placement-status sr-status-pending">Not Uploaded</span>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="sr-placement-item">
+                        <span class="sr-placement-label">Placement Status:</span>
+                        <span class="sr-placement-status sr-status-pending">Not Placed</span>
+                    </div>
+                    {% endif %}
+
+                </div>
+                {% else %}
+                <p>No placement details available.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="sr-card sr-card-payment">
+            <div class="sr-card-header">Payment Details</div>
+            <div class="sr-card-body" id="payment-details-body">
+                <div class="sr-payment-details-grid">
+                    <div class="sr-detail-item">
+                        <span class="sr-detail-label">Total Fees:</span>
+                        <span class="sr-detail-value" id="total-fees"></span>
+                    </div>
+                    <div class="sr-detail-item">
+                        <span class="sr-detail-label">Amount Paid:</span>
+                        <span class="sr-detail-value" id="amount-paid"></span>
+                    </div>
+                    <div class="sr-detail-item">
+                        <span class="sr-detail-label">Pending Amount:</span>
+                        <span class="sr-detail-value" id="pending-amount"></span>
+                    </div>
+                    <div class="sr-detail-item">
+                        <span class="sr-detail-label">Payment Status:</span>
+                        <span class="sr-detail-value sr-payment-status-label" id="payment-status"></span>
+                    </div>
+                </div>
+                <div id="emi-details-container"></div>
+            </div>
+        </div>
+
+        <div class="sr-card{% if company_interview_data %} sr-card-full-width{% endif %}">
+            <div class="sr-card-header">Interview Details</div>
+            <div class="form-section-body">
+            <div class="accordion" id="interviewAccordion">
+                {% for company_data in company_interview_data %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingCompany{{ forloop.counter }}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCompany{{ forloop.counter }}" aria-expanded="false" aria-controls="collapseCompany{{ forloop.counter }}">
+                            <div class="container-fluid">
+                                <div class="row w-100 ">
+                                    <div class="col-5 text-left">
+                                        {{ company_data.company_name }} - {{ company_data.company_location }}
+                                    </div>
+                                    <div class="col-4">
+                                        
+                                    </div>
+                                    <div class="col-3 text-right">
+                                       {{ company_data.total_cycles }} Interview{{ company_data.total_cycles|pluralize }} - {{ company_data.total_rounds }} Round{{ company_data.total_rounds|pluralize }}
+                                    </div>
+                                </div>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="collapseCompany{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="headingCompany{{ forloop.counter }}" data-bs-parent="#interviewAccordion">
+                        <div class="accordion-body">
+                            {% for cycle_number, interviews in company_data.cycles.items %}
+                            <div class="mb-3">
+                                <h5>Interview {{ cycle_number }}</h5>
+                                {% for interview in interviews %}
+                                <div class="ps-3">
+                                    <h6>Round {{ interview.round_number }} - {{ interview.interview_round|capfirst }}</h6>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <p><strong>Date:</strong> {{ interview.interview_date }} | <strong>Time:</strong> {{ interview.interview_time }} | <strong>Location:</strong> {{ interview.location|capfirst }}{% if interview.location == 'others' %} ({{ interview.other_location }}){% endif %} | <strong>Venue:</strong> {{ interview.venue|capfirst }}</p>
+                                        <p><strong>Scheduled By:</strong> <strong style="color: #074383;">{{ interview.created_by.name }}</strong> at {{ interview.created_at }}</p>
+                                    </div>
+                                    <p><strong>Status:</strong>
+                                        {% for status in interview.student_status.all %}
+                                            {% if status.student.id == student.id %}
+                                                {{ status.get_status_display }}
+                                                {% if status.status == 'rejected' or status.status == 'not_attended' and status.reason %}
+                                                    <br><strong>Reason:</strong> {{ status.reason }}
+                                                {% endif %}
+                                                {% if status.status == 'placed' and status.offer_letter %}
+                                                    <br><a href="{{ status.offer_letter.url }}" class="view-link" target="_blank">View Offer Letter</a>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="sr-card-body">
+                    <p>No interviews scheduled for this student.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        </div>
+
+        
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const studentId = "{{ student.student_id }}";
+        fetch(`/payments/api/payment-details/${studentId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('payment-details-body').innerHTML = `<p>${data.error}</p>`;
+                    return;
+                }
+
+                document.getElementById('total-fees').textContent = `₹${data.total_fees}`;
+                document.getElementById('amount-paid').textContent = `₹${data.amount_paid}`;
+                document.getElementById('pending-amount').textContent = `₹${data.total_pending_amount}`;
+                
+                const paymentStatus = document.getElementById('payment-status');
+                paymentStatus.textContent = data.payment_status;
+                paymentStatus.classList.add(data.payment_status.toLowerCase().replace(' ', '-'));
+
+                if (data.emi_type !== 'NONE' && data.emi_details.length > 0) {
+                    const emiContainer = document.getElementById('emi-details-container');
+                    let emiHtml = '<h4 class="sr-section-subtitle">EMI Details:</h4>';
+                    data.emi_details.forEach(emi => {
+                        emiHtml += `
+                            <div class="sr-emi-section ${emi.paid_amount ? 'paid-emi' : 'pending-emi'}">
+                                <h5>EMI ${emi.emi_number}</h5>
+                                <div class="sr-emi-details">
+                                    <div class="sr-emi-row">
+                                        <span class="sr-emi-label">Due Amount:</span>
+                                        <span class="sr-emi-value">₹${emi.due_amount}</span>
+                                    </div>
+                                    <div class="sr-emi-row">
+                                        <span class="sr-emi-label">Due Date:</span>
+                                        <span class="sr-emi-value">${new Date(emi.due_date).toLocaleDateString('en-GB')}</span>
+                                    </div>
+                                    ${emi.paid_amount ? `
+                                        <div class="sr-emi-row paid-amount">
+                                            <span class="sr-emi-label">Paid Amount:</span>
+                                            <span class="sr-emi-value">₹${emi.paid_amount}</span>
+                                            <span class="paid-date">(Paid on: ${new Date(emi.paid_date).toLocaleDateString('en-GB')})</span>
+                                        </div>
+                                    ` : `
+                                        <div class="sr-emi-row">
+                                            <span class="sr-emi-label">Status:</span>
+                                            <span class="sr-emi-value sr-status-pending">Pending</span>
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    emiContainer.innerHTML = emiHtml;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching payment details:', error);
+                document.getElementById('payment-details-body').innerHTML = '<p>Error loading payment details.</p>';
+            });
+
+        document.querySelector('.sr-download-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const reportContainer = document.querySelector('.student-report-container');
+            html2canvas(reportContainer).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `student-report-{{ student.student_id }}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,495 @@
+{% extends "base.html" %}
+{% load custom_filter %}
+{% block title %}Update Payment{% endblock %}
+
+{% block content %}
+<div class="payment-update">
+    <h2>Update Payment - {{ payment.student.first_name }} {{ payment.student.last_name|format_name }} ({{ payment.student.student_id }})</h2>
+
+    <!-- Initial Payment Details -->
+    <div class="initial-payment-section">
+        <h3>Initial Payment Details</h3>
+        <div class="payment-details">
+            <div class="detail-row">
+                <label>Amount:</label>
+                <span>₹{{ payment.amount_paid }}</span>
+            </div>
+            <div class="detail-row">
+                <label>Payment Proof:</label>
+                {% if payment.initial_payment_proof %}
+                    <a href="{{ payment.initial_payment_proof.url }}" target="_blank" class="proof-link">View Proof</a>
+                {% else %}
+                    <span class="no-proof">No proof available</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Summary -->
+    <div class="payment-summary">
+        <div class="summary-item">
+            <label>Total Fees:</label>
+            <span>₹{{ payment.total_fees }}</span>
+        </div>
+        <div class="summary-item">
+            <label>Total Paid:</label>
+            <span>₹{{ total_paid }}</span>
+        </div>
+        <div class="summary-item">
+            <label>Total Pending:</label>
+            <span>₹{{ total_pending }}</span>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="error-messages">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <!-- EMI Details -->
+        {% if payment.emi_type != 'NONE' %}
+            {% if payment.emi_1_amount %}
+            <div class="emi-section {% if payment.emi_1_paid_amount %}paid-emi{% elif not payment.emi_1_paid_amount and form.fields.emi_1_paid_amount.disabled == False %}current-emi{% else %}pending-emi{% endif %}">
+                <h3>EMI 1</h3>
+                <div class="emi-details">
+                    <div class="emi-row">
+                        <label>Original Amount:</label>
+                        <span>₹{{ payment.emi_1_amount }}</span>
+                    </div>
+                    <div class="emi-row">
+                        <label>Due Date:</label>
+                        <span class="emi-date" data-emi-field="emi_1_date">{{ payment.emi_1_date }}</span>
+                        {% if not payment.emi_1_paid_amount %}
+                        <i class="fas fa-edit edit-icon" style="cursor:pointer; margin-left: 10px;"></i>
+                        {% endif %}
+                    </div>
+                    {% if payment.emi_1_paid_amount %}
+                    <div class="emi-row paid-amount">
+                        <label>Paid Amount:</label>
+                        <span>₹{{ payment.emi_1_paid_amount }}</span>
+                        <span class="paid-date">(Paid on: {{ payment.emi_1_paid_date }})</span>
+                        {% if payment.emi_1_proof %}
+                            <a href="{{ payment.emi_1_proof.url }}" target="_blank" class="proof-link">View Proof</a>
+                        {% endif %}
+                        {% if payment.emi_1_updated_by %}
+                            <span class="updated-by">(Updated by: {{ payment.emi_1_updated_by.name }})</span>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="emi-row">
+                        <label>Paid Amount:</label>
+                        {{ form.emi_1_paid_amount }}
+                    </div>
+                    <div class="emi-row">
+                        <label>Paid Date:</label>
+                        {{ form.emi_1_paid_date }}
+                    </div>
+                    <div class="emi-row">
+                        <label>Payment Proof:</label>
+                        {{ form.emi_1_proof }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if payment.emi_2_amount %}
+            <div class="emi-section {% if payment.emi_2_paid_amount %}paid-emi{% elif not payment.emi_2_paid_amount and form.fields.emi_2_paid_amount.disabled == False %}current-emi{% else %}pending-emi{% endif %}">
+                <h3>EMI 2</h3>
+                <div class="emi-details">
+                    <div class="emi-row">
+                        <label>Original Amount:</label>
+                        <span>₹{{ payment.emi_2_amount }}</span>
+                    </div>
+                    <div class="emi-row">
+                        <label>Due Date:</label>
+                        <span class="emi-date" data-emi-field="emi_2_date">{{ payment.emi_2_date }}</span>
+                        {% if not payment.emi_2_paid_amount %}
+                        <i class="fas fa-edit edit-icon" style="cursor:pointer; margin-left: 10px;"></i>
+                        {% endif %}
+                    </div>
+                    {% if payment.emi_2_paid_amount %}
+                    <div class="emi-row paid-amount">
+                        <label>Paid Amount:</label>
+                        <span>₹{{ payment.emi_2_paid_amount }}</span>
+                        <span class="paid-date">(Paid on: {{ payment.emi_2_paid_date }})</span>
+                        {% if payment.emi_2_proof %}
+                            <a href="{{ payment.emi_2_proof.url }}" target="_blank" class="proof-link">View Proof</a>
+                        {% endif %}
+                        {% if payment.emi_2_updated_by %}
+                            <span class="updated-by">(Updated by: {{ payment.emi_2_updated_by.name }})</span>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="emi-row">
+                        <label>Paid Amount:</label>
+                        {{ form.emi_2_paid_amount }}
+                    </div>
+                    <div class="emi-row">
+                        <label>Paid Date:</label>
+                        {{ form.emi_2_paid_date }}
+                    </div>
+                    <div class="emi-row">
+                        <label>Payment Proof:</label>
+                        {{ form.emi_2_proof }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if payment.emi_3_amount %}
+            <div class="emi-section {% if payment.emi_3_paid_amount %}paid-emi{% elif not payment.emi_3_paid_amount and form.fields.emi_3_paid_amount.disabled == False %}current-emi{% else %}pending-emi{% endif %}">
+                <h3>EMI 3</h3>
+                <div class="emi-details">
+                    <div class="emi-row">
+                        <label>Original Amount:</label>
+                        <span>₹{{ payment.emi_3_amount }}</span>
+                    </div>
+                    <div class="emi-row">
+                        <label>Due Date:</label>
+                        <span class="emi-date" data-emi-field="emi_3_date">{{ payment.emi_3_date }}</span>
+                        {% if not payment.emi_3_paid_amount %}
+                        <i class="fas fa-edit edit-icon" style="cursor:pointer; margin-left: 10px;"></i>
+                        {% endif %}
+                    </div>
+                    {% if payment.emi_3_paid_amount %}
+                    <div class="emi-row paid-amount">
+                        <label>Paid Amount:</label>
+                        <span>₹{{ payment.emi_3_paid_amount }}</span>
+                        <span class="paid-date">(Paid on: {{ payment.emi_3_paid_date }})</span>
+                        {% if payment.emi_3_proof %}
+                            <a href="{{ payment.emi_3_proof.url }}" target="_blank" class="proof-link">View Proof</a>
+                        {% endif %}
+                        {% if payment.emi_3_updated_by %}
+                            <span class="updated-by">(Updated by: {{ payment.emi_3_updated_by.name }})</span>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="emi-row">
+                        <label>Paid Amount:</label>
+                        {{ form.emi_3_paid_amount }}
+                    </div>
+                    <div class="emi-row">
+                        <label>Paid Date:</label>
+                        {{ form.emi_3_paid_date }}
+                    </div>
+                    <div class="emi-row">
+                        <label>Payment Proof:</label>
+                        {{ form.emi_3_proof }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if payment.emi_4_amount %}
+            <div class="emi-section {% if payment.emi_4_paid_amount %}paid-emi{% elif not payment.emi_4_paid_amount and form.fields.emi_4_paid_amount.disabled == False %}current-emi{% else %}pending-emi{% endif %}">
+                <h3>EMI 4</h3>
+                <div class="emi-details">
+                    <div class="emi-row">
+                        <label>Original Amount:</label>
+                        <span>₹{{ payment.emi_4_amount }}</span>
+                    </div>
+                    <div class="emi-row">
+                        <label>Due Date:</label>
+                        <span class="emi-date" data-emi-field="emi_4_date">{{ payment.emi_4_date }}</span>
+                        {% if not payment.emi_4_paid_amount %}
+                        <i class="fas fa-edit edit-icon" style="cursor:pointer; margin-left: 10px;"></i>
+                        {% endif %}
+                    </div>
+                    {% if payment.emi_4_paid_amount %}
+                    <div class="emi-row paid-amount">
+                        <label>Paid Amount:</label>
+                        <span>₹{{ payment.emi_4_paid_amount }}</span>
+                        <span class="paid-date">(Paid on: {{ payment.emi_4_paid_date }})</span>
+                        {% if payment.emi_4_proof %}
+                            <a href="{{ payment.emi_4_proof.url }}" target="_blank" class="proof-link">View Proof</a>
+                        {% endif %}
+                        {% if payment.emi_4_updated_by %}
+                            <span class="updated-by">(Updated by: {{ payment.emi_4_updated_by.name }})</span>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="emi-row">
+                        <label>Paid Amount:</label>
+                        {{ form.emi_4_paid_amount }}
+                    </div>
+                    <div class="emi-row">
+                        <label>Paid Date:</label>
+                        {{ form.emi_4_paid_date }}
+                    </div>
+                    <div class="emi-row">
+                        <label>Payment Proof:</label>
+                        {{ form.emi_4_proof }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        {% endif %}
+
+        <div class="form-actions">
+            {% if all_paid %}
+                <a href="{% url 'payment_list' %}" class="cancel-button">Back</a>
+            {% else %}
+                <button type="submit">Save Changes</button>
+                <a href="{% url 'payment_list' %}" class="cancel-button">Cancel</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<style>
+.payment-update {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.initial-payment-section {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.payment-summary {
+    background-color: #e9ecef;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.summary-item {
+    flex: 1;
+    text-align: center;
+}
+
+.emi-section {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.current-emi {
+    border: 2px solid #007bff;
+    background-color: #f8f9fa;
+}
+
+.paid-emi {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.pending-emi {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+}
+
+.emi-details {
+    margin-top: 10px;
+}
+
+.emi-row {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+}
+
+.emi-row label {
+    min-width: 150px;
+    font-weight: bold;
+}
+
+.paid-amount {
+    color: #28a745;
+}
+
+.paid-date {
+    margin-left: 10px;
+    color: #6c757d;
+}
+
+.proof-link {
+    margin-left: 10px;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.proof-link:hover {
+    text-decoration: underline;
+}
+
+.form-actions {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.form-actions button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.cancel-button {
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    display: inline-block;
+}
+
+.error-messages {
+    color: #dc3545;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #dc3545;
+    border-radius: 5px;
+    background-color: #f8d7da;
+}
+
+.no-proof {
+    color: #6c757d;
+    font-style: italic;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // This script handles client-side validation for EMI payments.
+    const emiSections = document.querySelectorAll('.emi-section');
+    const submitButton = document.querySelector('button[type="submit"]');
+
+    emiSections.forEach(section => {
+        const originalAmountSpan = section.querySelector('.emi-row:first-child span');
+        const paidAmountInput = section.querySelector('input[name$="_paid_amount"]');
+        
+        if (paidAmountInput && !paidAmountInput.disabled) {
+            const originalAmount = parseFloat(originalAmountSpan.textContent.replace('₹', ''));
+
+            // Create a container for the error message
+            let errorDiv = document.createElement('div');
+            errorDiv.style.color = 'red';
+            errorDiv.style.fontSize = '0.9em';
+            errorDiv.style.marginTop = '5px';
+            paidAmountInput.parentNode.appendChild(errorDiv);
+
+            const validate = () => {
+                const paidAmount = parseFloat(paidAmountInput.value);
+                const isEmi4 = paidAmountInput.name.includes('emi_4');
+
+                if (isEmi4) {
+                    if (paidAmount !== originalAmount) {
+                        errorDiv.textContent = 'For EMI 4, the paid amount must exactly match the original amount.';
+                        submitButton.disabled = true;
+                    } else {
+                        errorDiv.textContent = '';
+                        submitButton.disabled = false;
+                    }
+                } else {
+                    if (paidAmount > originalAmount) {
+                        errorDiv.textContent = 'Paid amount cannot exceed the original amount.';
+                        submitButton.disabled = true;
+                    } else {
+                        errorDiv.textContent = '';
+                        submitButton.disabled = false;
+                    }
+                }
+            };
+
+            paidAmountInput.addEventListener('input', validate);
+            validate(); // Initial check
+        }
+    });
+
+    // Script to set today's date for the enabled paid date field
+    const paidDateInputs = document.querySelectorAll('input[name$="_paid_date"]');
+    paidDateInputs.forEach(input => {
+        if (!input.disabled) {
+            const today = new Date().toISOString().split('T')[0];
+            input.value = today;
+            input.readOnly = true;
+        }
+    });
+
+    // Script for editing EMI dates
+    document.querySelectorAll('.edit-icon').forEach(icon => {
+        icon.addEventListener('click', function() {
+            const dateSpan = this.previousElementSibling;
+            const currentText = dateSpan.textContent.trim();
+            const emiField = dateSpan.dataset.emiField;
+
+            // Create a date input
+            const dateInput = document.createElement('input');
+            dateInput.type = 'date';
+            dateInput.value = new Date(currentText).toISOString().slice(0, 10);
+            
+            // Replace span with input
+            dateSpan.style.display = 'none';
+            this.style.display = 'none'; // Hide edit icon
+            dateSpan.parentNode.insertBefore(dateInput, dateSpan.nextSibling);
+
+            dateInput.focus();
+
+            // Handle date change
+            dateInput.addEventListener('blur', () => {
+                // Revert if input is empty
+                dateSpan.style.display = '';
+                this.style.display = '';
+                dateInput.remove();
+            });
+            
+            dateInput.addEventListener('change', function() {
+                const newDate = this.value;
+                const paymentId = '{{ payment.payment_id }}';
+                const url = `{% url 'update_emi_date' payment_id=payment.payment_id %}`;
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify({
+                        emi_field: emiField,
+                        new_date: newDate,
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        dateSpan.textContent = new Date(newDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                        alert(data.message);
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An unexpected error occurred.');
+                })
+                .finally(() => {
+                    // Revert UI
+                    dateSpan.style.display = '';
+                    icon.style.display = '';
+                    dateInput.remove();
+                });
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

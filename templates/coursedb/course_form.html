@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Create Course{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/student_form_modern.css' %}">
+<link rel="stylesheet" href="{% static 'css/course_form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="student-form-container">
+    <div class="form-header">
+        <h1>Create Course</h1>
+        <p class="form-subtitle">Enter the details to create a new course</p>
+    </div>
+
+    <form method="post" class="student-form" id="course-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+        <div class="form-section-card">
+            <div class="form-section-header">
+                <h5 style="color: white;"><i class="fas fa-book me-2" style="color: white;"></i>Course Details</h5>
+            </div>
+            <div class="form-section-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.course_name.label_tag }}
+                                <span class="required-indicator">*</span>
+                            </div>
+                            {{ form.course_name }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.category.label_tag }}
+                                <span class="required-indicator">*</span>
+                            </div>
+                            {{ form.category }}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.code.label_tag }}
+                            </div>
+                            {{ form.code }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.course_type.label_tag }}
+                                <span class="required-indicator">*</span>
+                            </div>
+                            {{ form.course_type }}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="label-form">
+                                {{ form.total_duration.label_tag }}
+                                <span class="required-indicator">*</span>
+                            </div>
+                            {{ form.total_duration }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section-card">
+            <div class="form-section-header">
+                <h5 style="color: white;"><i class="fas fa-cogs me-2" style="color: white;"></i>Modules</h5>
+            </div>
+            <div class="form-section-body">
+                <div id="modules-container"></div>
+                <button type="button" class="btn btn-primary" id="add-module-btn">Add Module</button>
+            </div>
+        </div>
+        <div id="duration-validation-message" class="mt-3"></div>
+         <div class="form-actions">
+             <button type="submit" class="btn btn-success">Save Course</button>
+         </div>
+
+        <!-- Templates - hidden but present in DOM -->
+        <template id="module-template">
+            <div class="module-form">
+                <button type="button" class="remove-btn remove-module-btn">X</button>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Module Name<span class="required-indicator">*</span></label>
+                            <input type="text" name="module_name" class="form-control">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Module Hours<span class="required-indicator">*</span></label>
+                            <input type="number" name="module_hours" min="1" step="0.01" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label style="font-weight:normal;">
+                        <input type="checkbox" name="has_topics" class="has-topics-checkbox">
+                        Has Topics?
+                    </label>
+                </div>
+                <div class="topics-section" style="display:none;">
+                    <div class="topic-forms-container"></div>
+                    <button type="button" class="btn btn-sm btn-secondary add-topic-btn">Add Topic</button>
+                </div>
+            </div>
+        </template>
+        <template id="topic-template">
+            <div class="topic-form">
+                <button type="button" class="remove-btn remove-topic-btn">X</button>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Topic Name<span class="required-indicator">*</span></label>
+                            <input type="text" name="topic_name" class="form-control">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Topic Hours<span class="required-indicator">*</span></label>
+                            <input type="number" name="topic_hours" min="1" step="0.01" class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/course_create_form.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    try {
+      if (!CSS.supports('selector(:has(*))')) {
+        document.querySelectorAll('.form-group').forEach(function(group) {
+          if (group.querySelector('.is-invalid')) {
+            group.classList.add('has-invalid');
+          }
+        });
+      }
+    } catch (e) {
+      // Defensive: some very old browsers may not support CSS.supports
+      document.querySelectorAll('.form-group').forEach(function(group) {
+        if (group.querySelector('.is-invalid')) {
+          group.classList.add('has-invalid');
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

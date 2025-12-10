@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% load custom_filter %}
+{% block title %}Student List{% endblock %}
+
+{% block content %}
+<style>
+    .batch-list-cell {
+        max-width: 250px;
+        max-height: 70px;
+        overflow-y: auto;
+        display: block;
+    }
+    .batch-list-cell::-webkit-scrollbar {
+        display: none;
+    }
+    
+</style>
+{% if messages %}
+<div class="messages mb-4">
+    {% for message in messages %}
+        {% if 'student_message' in message.tags %}
+            <div class="alert alert-{{ message.level_tag }} alert-dismissible fade show" role="alert">
+                <i class="fas {% if message.level_tag == 'success' %}fa-check-circle{% elif message.level_tag == 'error' %}fa-times-circle{% elif message.level_tag == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="list-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-user-graduate me-2"></i>Student List</h2>
+        <div class="d-flex gap-2">
+            {% if request.user.role != 'placement' %}
+            <a href="{% url 'create_student' %}" class="btn-primary">
+                <i class="fas fa-plus me-2"></i>Add New Student
+            </a>
+            {% if request.user.role != 'consultant' %}
+            <a href="{% url 'import_students' %}" class="btn-secondary">
+                <i class="fas fa-file-import me-2"></i>Import from Excel
+            </a>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="get" class="filters">
+        <div class="filter-row">
+            <div class="filter-group">
+                {{ form.q.label_tag }}
+                {{ form.q }}
+            </div>
+            <div class="filter-group">
+                {{ form.course_category.label_tag }}
+                {{ form.course_category }}
+            </div>
+            <div class="filter-group">
+                {{ form.course.label_tag }}
+                {{ form.course }}
+            </div>
+            <div class="filter-group">
+                {{ form.course_status.label_tag }}
+                {{ form.course_status }}
+            </div>
+            <div class="filter-group">
+                {{ form.start_date.label_tag }}
+                {{ form.start_date }}
+            </div>
+            <div class="filter-group">
+                {{ form.end_date.label_tag }}
+                {{ form.end_date }}
+            </div>
+            <div class="filter-group">
+                {{ form.status.label_tag }}
+                {{ form.status }}
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn-primary">Apply Filters</button>
+            <a href="{% url 'student_list' %}" class="btn-secondary">Reset</a>
+        </div>
+    </form>
+
+    <div class="table-wrapper">
+        <table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Location</th>
+            <th>Consultant</th>
+            <th>Course Name</th>
+            <th>Course Category</th>
+            <th>Current Batches</th>
+            <th>Percentage</th>
+            <th>Course Status</th>
+            <th>Enrollment Date</th>
+            <th>Status</th>
+            {% if request.user.role != 'batch_coordination' %}
+            <th>Actions</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for student in students %}
+        <tr>
+            <td>
+                <a href="{% url 'student_report' student.student_id %}">
+                    <span class="badge bg-secondary">{{ student.student_id }}</span>
+                </a>
+            </td>
+            <td>{{ student.first_name }} {{ student.last_name|default:"" }}</td>
+            <td><a href="mailto:{{ student.email }}" class="text-decoration-none text-primary">{{ student.email }}</a></td>
+            <td><a href="tel:{{ student.country_code }}{{ student.phone }}" class="text-decoration-none text-primary">{{ student.country_code }} {{ student.phone }}</a></td>
+            <td>{{ student.location|default:"—" }}</td>
+            <td>{{ student.consultant.name|default:"—" }}</td>
+            <td>{{ student.course.course_name|default:"—" }}</td>
+            <td>{{ student.course.category.name|default:"—" }}</td>
+            <td>
+                <div class="batch-list-cell">
+                    {% for batch in student.unique_batches %}
+                       <a href="{% url 'batchdb:batch_report' batch.pk %}"><span class="badge {% if batch.id in student.active_batch_ids %}bg-primary{% else %}bg-secondary{% endif %}">{{ batch.batch_id }} - {{ batch.course.course_name }}</span></a>
+                    {% empty %}
+                        No batches
+                    {% endfor %}
+                </div>
+            </td>
+            <td>{{ student.course_percentage }}</td>
+            <td>{{ student.get_course_status_display }}</td>
+            <td>{{ student.enrollment_date }}</td>
+            <td>
+                <div class="status-indicators">
+                    <span class="indicator indicator-certificate {% if student.certificate_issued %}highlighted{% endif %}" title="Certificate Issued"></span>
+                </div>
+            </td>
+            {% if request.user.role != 'batch_coordination' %}
+            <td>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{% url 'student_report' student.student_id %}" class="btn-secondary"><i class="fas fa-eye"></i></a>
+                    <a href="{% url 'update_student' student.student_id %}" class="btn-update"><i class="fas fa-edit"></i></a>
+                    {% if request.user.role == 'admin' %}
+                    <a href="{% url 'delete_student' student.student_id %}" class="btn-danger"><i class="fas fa-trash"></i></a>
+                    {% endif %}
+                </div>
+            </td>
+            {% endif %}
+        </tr>
+    {% empty %}
+        <tr><td colspan="10" class="text-center py-4 text-muted">
+                <i class="fas fa-user-slash me-2"></i>No students found.
+            </td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+</div>
+
+<div class="pagination">
+    <span class="step-links">
+        {% if students.has_previous %}
+            <a href="?page=1&{{ query_params }}">&laquo; first</a>
+            <a href="?page={{ students.previous_page_number }}&{{ query_params }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ students.number }} of {{ students.paginator.num_pages }}.
+        </span>
+
+        {% if students.has_next %}
+            <a href="?page={{ students.next_page_number }}&{{ query_params }}">next</a>
+            <a href="?page={{ students.paginator.num_pages }}&{{ query_params }}">last &raquo;</a>
+        {% endif %}
+    </span>
+    <form method="get" class="page-search">
+        <input type="number" name="page" min="1" max="{{ students.paginator.num_pages }}" placeholder="Page">
+        <input type="hidden" name="q" value="{{ request.GET.q }}">
+        <input type="hidden" name="course_category" value="{{ request.GET.course_category }}">
+        <input type="hidden" name="course" value="{{ request.GET.course }}">
+        <input type="hidden" name="course_status" value="{{ request.GET.course_status }}">
+        <input type="hidden" name="start_date" value="{{ request.GET.start_date }}">
+        <input type="hidden" name="end_date" value="{{ request.GET.end_date }}">
+        <button type="submit">Go</button>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const categorySelect = document.getElementById("id_course_category");
+    const courseSelect = document.getElementById("id_course");
+
+    if (categorySelect && courseSelect) {
+        categorySelect.addEventListener("change", function () {
+            const categoryId = this.value;
+            courseSelect.innerHTML = '<option value="">All Courses</option>'; // Clear existing options
+
+            if (categoryId) {
+                fetch(`/api/courses-by-category/${categoryId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(course => {
+                            const option = new Option(course.course_name, course.id);
+                            courseSelect.add(option);
+                        });
+                    });
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

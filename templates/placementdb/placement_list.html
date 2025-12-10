@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+{% load custom_filter %}
+{% block title %}Placement Records{% endblock %}
+
+{% block content %}
+<div class="payment-list-container">
+    <h2>{{ list_title|default:"Placement Records" }}</h2>
+    <div class="accordion" id="filterAccordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    <i class="fas fa-filter me-2"></i> Filters
+                </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#filterAccordion">
+                <div class="accordion-body">
+                    <form method="get" class="filters">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                {{ form.q.label_tag }}
+                                {{ form.q }}
+                            </div>
+                            <div class="filter-group">
+                                {{ form.ug_degree.label_tag }}
+                                {{ form.ug_degree }}
+                            </div>
+                            <div class="filter-group">
+                                {{ form.ug_branch.label_tag }}
+                                {{ form.ug_branch }}
+                            </div>
+                             <div class="filter-group">
+                                {{ form.ug_passout.label_tag }}
+                                {{ form.ug_passout }}
+                            </div>
+                        </div>
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                {{ form.pg_degree.label_tag }}
+                                {{ form.pg_degree }}
+                            </div>
+                            <div class="filter-group">
+                                {{ form.pg_branch.label_tag }}
+                                {{ form.pg_branch }}
+                            </div>
+                            <div class="filter-group">
+                                {{ form.pg_passout.label_tag }}
+                                {{ form.pg_passout }}
+                            </div>
+                            <div class="filter-group">
+                                {{ form.batch_id.label_tag }}
+                                {{ form.batch_id }}
+                            </div>
+                            <div class="filter-group">
+                                 {{ form.interview_count.label_tag }}
+                                 {{ form.interview_count }}
+                            </div>
+                        </div>
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                {{ form.course_category.label_tag }}
+                                {{ form.course_category }}
+                            </div>
+                            <div class="filter-group">
+                                {{ form.course.label_tag }}
+                                {{ form.course }}
+                            </div>
+                            <div class="filter-group">
+                                {{ form.course_status.label_tag }}
+                                {{ form.course_status }}
+                            </div>
+                            <div class="filter-group">
+                                {{ form.location.label_tag }}
+                                {{ form.location }}
+                            </div>
+                            <div class="filter-group">
+                                {{ form.course_percentage.label_tag }}
+                                {{ form.course_percentage }}
+                            </div>
+                           <div class="filter-group">
+                               {{ form.resume_status.label_tag }}
+                               {{ form.resume_status }}
+                          </div>
+                          <div class="filter-group">
+                               {{ form.is_active.label_tag }}
+                               {{ form.is_active }}
+                          </div>
+                          <div class="filter-group">
+                               {{ form.status.label_tag }}
+                               {{ form.status }}
+                          </div>
+                        </div>
+                        <div class="filter-row">
+                           <div class="filter-group">
+                                 {{ form.course_start_from.label_tag }}
+                                 {{ form.course_start_from }}
+                           </div>
+                           <div class="filter-group">
+                                 {{ form.course_start_to.label_tag }}
+                                 {{ form.course_start_to }}
+                           </div>
+                           <div class="filter-group">
+                                 {{ form.course_end_from.label_tag }}
+                                 {{ form.course_end_from }}
+                           </div>
+                           <div class="filter-group">
+                                 {{ form.course_end_to.label_tag }}
+                                 {{ form.course_end_to }}
+                           </div>
+                       </div>
+                       <div class="filter-actions">
+                           <button type="submit" class="btn-primary">Apply Filters</button>
+                            <a href="{% url 'placementdb:placement_list' %}" class="btn-secondary">Reset</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Photo</th>
+                    <th>Student ID</th>
+                    <th>Inv.C</th>
+                    <th>Batch ID</th>
+                    <th>Course Name</th>
+                    <th>Student Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Trainers</th>
+                    <th>Location</th>
+                    <th>UG Degree</th>
+                    <th>Year of Pass</th>
+                    <th>Percentage</th>
+                    <th>PG Degree</th>
+                    <th>Year of Pass</th>
+                    <th>Percentage</th>
+                    <th>Course Start Date</th>
+                    <th>Course End Date</th>
+                    <th>Course Status</th>
+                    <th>Course Percentage</th>
+                    <th style="display: flex; flex-direction: column; align-items: center;">Status
+                        <br>
+                        <span style="font-size: 10px; font-weight: 100;">O-P-I-R-M</span>
+                    </th>
+                    <th>Resume Link</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for placement in placements %}
+                <tr class="{% if not placement.is_active %}inactive-row{% endif %}">
+                    <td>
+                        {% if placement.std_professional_photo %}
+                            <a href="{{ placement.std_professional_photo.url }}" target="_blank">
+                                <img src="{{ placement.std_professional_photo.url }}" alt="Photo" width="40" height="40" style="border-radius: 50%;">
+                            </a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-indicator {% if placement.is_active %}status-active{% else %}status-inactive{% endif %}"
+                               {% if not placement.is_active %}
+                                  data-bs-toggle="collapse"
+                                  data-bs-target="#reason-{{ placement.id }}"
+                                  style="margin-right: 6%; cursor: pointer;"
+                              {% else %}
+                                  style="margin-right: 6%;"
+                              {% endif %}>
+                        </span>
+                        <a href="{% url 'student_report' placement.student.student_id %}" class="view-link">
+                            {{ placement.student.student_id }}
+                        </a>
+                    </td>
+                    <td>{{ placement.interview_count }}</td>
+                    <td>
+                        {% for batch in placement.unique_batches %}
+                            <a href="{% url 'batchdb:batch_report' batch.pk %}"><span class="badge {% if batch.id in placement.active_batch_ids %}bg-primary{% else %}bg-info{% endif %}">{{ batch.batch_id }}</span></a>
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </td>
+                    <td>{{ placement.student.course.course_name|default:"-" }}</td>
+                    <td>{{ placement.student.first_name }} {{ placement.student.last_name|default:"" }}</td>
+                    <td>{{ placement.student.phone|default:"-" }}</td>
+                    <td>{{ placement.student.email|default:"-" }}</td>
+                    <td>
+                        {% for trainer in placement.unique_trainers %}
+                            <span class="badge bg-secondary">{{ trainer.name }}</span>
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </td>
+                    <td>{{ placement.student.location|default:"-" }}</td>
+                    <td>{{ placement.student.ugdegree|default:"-" }}</td>
+                    <td>{{ placement.student.ugpassout|default:"-" }}</td>
+                    <td>{{ placement.student.ugpercentage|default:"-" }}</td>
+                    <td>{{ placement.student.pgdegree|default:"-" }}</td>
+                    <td>{{ placement.student.pgpassout|default:"-" }}</td>
+                    <td>{{ placement.student.pgpercentage|default:"-" }}</td>
+                    <td>{{ placement.student.start_date|date:"d-m-Y"|default:"-" }}</td>
+                    <td>{{ placement.student.end_date|date:"d-m-Y"|default:"-" }}</td>
+                    <td>{{ placement.student.get_course_status_display|default:"-" }}</td>
+                    <td>{{ placement.student.course_percentage|default:"0" }}%</td>
+                    <td>
+                        <div class="status-indicators">
+                            <span class="indicator indicator-onboarding-call {% if placement.student.onboardingcalldone %}highlighted{% endif %}" title="Onboarding Call Done"></span>
+                            <span class="indicator indicator-placement-session {% if placement.student.placement_session_completed %}highlighted{% endif %}" title="Placement Session"></span>
+                            <span class="indicator indicator-interview-question {% if placement.student.interviewquestion_shared %}highlighted{% endif %}" title="Interview Question Shared"></span>
+                            <span class="indicator indicator-resume-template {% if placement.student.resume_template_shared %}highlighted{% endif %}" title="Resume Template Shared"></span>
+                            <span class="indicator indicator-mock-interview {% if placement.student.mock_interview_completed %}highlighted{% endif %}" title="Mock Interview"></span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if placement.resume_link %}
+                            <a href="{{ placement.resume_link.url }}" target="_blank" style="color: #6c757d;">View Resume</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'placementdb:update_placement' placement.pk %}" class="btn btn-primary"><i class="fas fa-edit"></i></a>
+                        <a href="{% url 'placementdb:delete_placement' placement.pk %}" class="btn btn-danger btn-delete"><i class="fas fa-trash"></i></a>
+                    </td>
+                </tr>
+                {% if not placement.is_active %}
+                <tr class="collapse" id="reason-{{ placement.id }}">
+                    <td colspan="23" class="inactive-reason">
+                        <div class="p-3 bg-light">
+                            <strong>Reason for Inactive:</strong> {{ placement.reason_for_inactive|default:"No reason provided" }}
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+                {% empty %}
+                <tr><td colspan="16">No placement records found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if placements.has_other_pages %}
+    <div class="pagination">
+        <span class="step-links">
+            {% if placements.has_previous %}
+                <a href="?page=1&{{ query_params }}">&laquo; first</a>
+                <a href="?page={{ placements.previous_page_number }}&{{ query_params }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ placements.number }} of {{ placements.paginator.num_pages }}.
+            </span>
+
+            {% if placements.has_next %}
+                <a href="?page={{ placements.next_page_number }}&{{ query_params }}">next</a>
+                <a href="?page={{ placements.paginator.num_pages }}&{{ query_params }}">last &raquo;</a>
+            {% endif %}
+        </span>
+        <form method="get" class="page-search">
+            <input type="number" name="page" min="1" max="{{ placements.paginator.num_pages }}" placeholder="Page">
+            <input type="hidden" name="q" value="{{ request.GET.q }}">
+            <input type="hidden" name="ug_degree" value="{{ request.GET.ug_degree }}">
+            <input type="hidden" name="ug_branch" value="{{ request.GET.ug_branch }}">
+            <input type="hidden" name="ug_passout" value="{{ request.GET.ug_passout }}">
+            <input type="hidden" name="pg_degree" value="{{ request.GET.pg_degree }}">
+            <input type="hidden" name="pg_branch" value="{{ request.GET.pg_branch }}">
+            <input type="hidden" name="pg_passout" value="{{ request.GET.pg_passout }}">
+            <input type="hidden" name="batch_id" value="{{ request.GET.batch_id }}">
+            <input type="hidden" name="course_category" value="{{ request.GET.course_category }}">
+            <input type="hidden" name="course" value="{{ request.GET.course }}">
+            <input type="hidden" name="course_status" value="{{ request.GET.course_status }}">
+            <input type="hidden" name="location" value="{{ request.GET.location }}">
+            <input type="hidden" name="course_percentage" value="{{ request.GET.course_percentage }}">
+            <input type="hidden" name="resume_status" value="{{ request.GET.resume_status }}">
+            <input type="hidden" name="is_active" value="{{ request.GET.is_active }}">
+            <input type="hidden" name="interview_count" value="{{ request.GET.interview_count }}">
+            <input type="hidden" name="course_start_from" value="{{ request.GET.course_start_from }}">
+            <input type="hidden" name="course_start_to" value="{{ request.GET.course_start_to }}">
+            <input type="hidden" name="course_end_from" value="{{ request.GET.course_end_from }}">
+            <input type="hidden" name="course_end_to" value="{{ request.GET.course_end_to }}">
+            <button type="submit">Go</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+<style>
+    /* These styles are intentionally left empty to allow the main CSS file to control the indicators */
+    .status-indicators {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+    }
+    .accordion-button {
+        transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+    }
+    .accordion-button:not(.collapsed) {
+        color: #fff;
+        background-color: #007bff;
+    }
+    .accordion-button:hover {
+        background-color: #0056b3;
+        color: #fff;
+    }
+    .accordion-collapse {
+        transition: height 0.35s ease;
+    }
+    .status-indicator {
+        height: 10px;
+        width: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .status-active {
+        background-color: green;
+    }
+    .status-inactive {
+        background-color: red;
+    }
+    .payment-list-container {
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .filters {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .filter-row {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 10px;
+    }
+    .filter-group {
+        flex: 1;
+    }
+    .filter-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+    .filter-group input, .filter-group select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    .btn-primary, .btn-secondary, .btn-update {
+        padding: 7px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        color: white;
+    }
+    .btn-secondary { background-color: #6c757d; }
+    .btn-update { background-color: #28a745; font-size: 0.9em; padding: 5px 10px;}
+    .btn-danger { background-color: #dc3545;padding: 7px 14px; }
+
+    .table-wrapper {
+        overflow-x: scroll;
+        width: 100%;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        white-space: nowrap;
+    }
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('id_course_category');
+    const courseSelect = document.getElementById('id_course');
+
+    categorySelect.addEventListener('change', function() {
+        const categoryId = this.value;
+        courseSelect.innerHTML = '<option value="">All Courses</option>';
+
+        if (categoryId) {
+            fetch(`/api/courses-by-category/${categoryId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(course => {
+                        const option = document.createElement('option');
+                        option.value = course.id;
+                        option.textContent = course.course_name;
+                        courseSelect.appendChild(option);
+                    });
+                });
+        }
+    });
+
+});
+</script>
+{% endblock %}

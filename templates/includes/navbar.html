@@ -1,0 +1,50 @@
+{% load static %}
+
+<nav class="navbar">
+    <a href="/" class="navbar-brand">
+        <img src="{% static 'images/logo.png' %}" alt="BTree Logo" style="height: 40px; margin-right: 10px;">
+        <span>BTRS Portal</span>
+    </a>
+    <div class="navbar-right">
+        {% if user.is_authenticated %}
+            {% if user.is_superuser or user.role == 'staff' %}
+            <div class="dropdown">
+                <button class="profile-button" type="button" id="dashboardDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="me-2">Dashboards</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dashboardDropdown">
+                    {% if user.is_superuser %}
+                        <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">Admin Dashboard</a></li>
+                        <li><a class="dropdown-item" href="{% url 'batch_coordination_dashboard' %}">Batch Coordination Dashboard</a></li>
+                        <li><a class="dropdown-item" href="{% url 'consultant_dashboard' %}">Consultant Dashboard</a></li>
+                        <li><a class="dropdown-item" href="{% url 'placement_dashboard' %}">Placement Dashboard</a></li>
+                        <li><a class="dropdown-item" href="{% url 'staff_dashboard' %}">Staff Dashboard</a></li>
+                    {% elif user.role == 'staff' %}
+                        <li><a class="dropdown-item" href="{% url 'consultant_dashboard' %}">Consultant Dashboard</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+            <div class="dropdown">
+                <button class="profile-button" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="me-2">{{ user.name }}</span>
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="profile-picture" height="20px">
+                    {% else %}
+                        <i class="fas fa-user-circle"></i>
+                    {% endif %}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                    {% if user.role == 'admin' or user.role == 'staff' %}
+                    <li><a class="dropdown-item" href="{% url 'update_user' pk=user.pk %}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                    {% endif %}
+                    <li><a class="dropdown-item" href="{% url 'password_change' %}"><i class="fas fa-key me-2"></i>Change Password</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                </ul>
+            </div>
+        {% else %}
+    
+        {% endif %}
+    </div>
+</nav>

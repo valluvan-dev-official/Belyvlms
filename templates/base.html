@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Institute Portal{% endblock %}</title>
+    {% load static %}
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-5-theme/1.3.0/select2-bootstrap-5-theme.min.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+    <link rel="stylesheet" href="{% static 'css/list_pages.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/user_form.css' %}">
+    <!-- Select2 CSS -->
+    {% block extra_css %}{% endblock %}
+    <style>
+        .main-container {
+            display: flex;
+        }
+        .sidebar {
+            width: 250px;
+            transition: width 0.3s;
+            flex-shrink: 0;
+        }
+        .content-container {
+            flex-grow: 1;
+            transition: margin-left 0.3s;
+        }
+        .sidebar.collapsed {
+            width: 60px;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+        .sidebar.collapsed .sidebar-nav .nav-link {
+            justify-content: center;
+            width: 66px;
+            border-radius: 0;
+        }
+        .sidebar.collapsed .sidebar-nav span,
+        .sidebar.collapsed .sidebar-header h3 {
+            display: none;
+        }
+        .sidebar.collapsed .sidebar-container {
+            padding: 10px;
+            position: fixed;
+        }
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+        }
+        #sidebar-toggle {
+            font-size: 1.2rem;
+            background-color: transparent;
+            color: var(--text-primary);
+        }
+        .sidebar.collapsed .sidebar-nav .nav-link i{
+            margin: 0;
+        }
+        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            display: flex;
+            align-items: center;
+        }
+        .select2-container--bootstrap-5 .select2-results__option {
+            display: flex;
+            align-items: center;
+        }
+        .country-flag {
+            width: 20px;
+            height: 15px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+    <div class="main-container">
+        {% if user.is_authenticated %}
+        <div class="sidebar">
+            {% include 'includes/sidebar.html' %}
+        </div>
+        {% endif %}
+        <!-- Toast Container (top-right) -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
+  {% if messages %}
+    {% for message in messages %}
+      {% if page_tag in message.tags %}
+        <div class="toast align-items-center text-bg-{{ message.level_tag }} border-0 mb-2" 
+             role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+          <div class="d-flex">
+            <div class="toast-body">
+              <i class="fas 
+                  {% if message.level_tag == 'success' %}fa-check-circle
+                  {% elif message.level_tag == 'error' %}fa-times-circle
+                  {% elif message.level_tag == 'warning' %}fa-exclamation-triangle
+                  {% else %}fa-info-circle{% endif %} me-2"></i>
+              {{ message }}
+            </div>
+            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+</div>
+
+        <div class="content-container" {% if not user.is_authenticated %}style="margin-left: 0;"{% endif %}>
+            <div class="container-fluid">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        {% block breadcrumbs %}
+                            {% if breadcrumbs %}
+                                {% for breadcrumb in breadcrumbs %}
+                                    <li class="breadcrumb-item {% if forloop.last %}active{% endif %}">
+                                        {% if forloop.last %}
+                                            {{ breadcrumb.0 }}
+                                        {% else %}
+                                            <a href="{{ breadcrumb.1 }}">{{ breadcrumb.0 }}</a>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            {% endif %}
+                        {% endblock %}
+                    </ol>
+                </nav>
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    <!-- jQuery (downgraded to 3.6.4 to avoid :has() selector detection issues) -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const toastElList = [].slice.call(document.querySelectorAll('.toast'))
+    toastElList.map(function (toastEl) {
+      const toast = new bootstrap.Toast(toastEl)
+      toast.show()
+    })
+  });
+</script>
+
+    <script>
+        $(document).ready(function() {
+            const sidebar = $('.sidebar');
+            const contentContainer = $('.content-container');
+
+            function updateContentMargin() {
+                if (sidebar.length && sidebar.is(':visible')) {
+                    if (sidebar.hasClass('collapsed')) {
+                        contentContainer.css('margin-left', '60px');
+                    } else {
+                        contentContainer.css('margin-left', '250px');
+                    }
+                } else {
+                    contentContainer.css('margin-left', '0');
+                }
+            }
+
+            $('#sidebar-toggle').on('click', function() {
+                sidebar.toggleClass('collapsed');
+                updateContentMargin();
+            });
+
+            // Initial setup
+            updateContentMargin();
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+    <script>
+        $(document).ready(function() {
+            function formatCountry(country) {
+                if (!country.id) {
+                    return country.text;
+                }
+                var countryName = country.text.split('(')[0].trim();
+                var countryCode = country.id.toLowerCase();
+                var $country = $(
+                    '<span><img src="https://flagcdn.com/w20/' + country.id.toLowerCase() + '.png" class="country-flag" /> ' + countryName + ' (' + $(country.element).data('code') + ')' + '</span>'
+                );
+                return $country;
+            }
+
+            function initializeCountryCodeDropdown(selector) {
+                $(selector).select2({
+                    theme: "bootstrap-5",
+                    templateResult: formatCountry,
+                    templateSelection: formatCountry,
+                    width: '100%'
+                });
+            }
+
+            // Initialize for existing and dynamically added fields
+            initializeCountryCodeDropdown('.country-code-select');
+
+            // You can also use it with a mutation observer for dynamically added forms
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+                        $(mutation.addedNodes).find('.country-code-select').each(function() {
+                            initializeCountryCodeDropdown(this);
+                        });
+                    }
+                });
+            });
+
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+/* Custom styles that complement theme.css */
+
+/* Sidebar Styles */
+.sidebar-container {
+    padding: 20px;
+}
+
+.sidebar-container h3 {
+    color: #333;
+}
+
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav li {
+    margin-bottom: 10px;
+}
+
+.sidebar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background-color 0.3s, color 0.3s;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.sidebar-nav .nav-link:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-blue);
+}
+
+.sidebar-nav .nav-link.active {
+    background-color: var(--primary-blue);
+    color: #fff;
+}
+
+.sidebar-nav .nav-link i {
+    margin-right: 15px;
+    width: 20px;
+    text-align: center;
+}
+
+/* Navbar styles */
+.navbar {
+    background-color: var(--background-light);
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 24px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1000;
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.welcome-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.welcome-text i {
+    color: var(--primary-blue);
+}
+
+.navbar .btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+}
+
+.navbar .btn i {
+    margin-right: 6px;
+}
+
+/* Search form styles */
+.search-form {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.search-form input {
+    margin-bottom: 0;
+    max-width: 300px;
+}
+
+/* Messages */
+.error-message {
+    padding: 12px;
+    border-radius: 6px;
+    background-color: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.2);
+    color: var(--danger-color);
+    margin-bottom: 16px;
+}
+
+.success-message {
+    padding: 12px;
+    border-radius: 6px;
+    background-color: rgba(40, 167, 69, 0.1);
+    border: 1px solid rgba(40, 167, 69, 0.2);
+    color: var(--success-color);
+    margin-bottom: 16px;
+}
+
+.search-form {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.search-form input {
+    margin-bottom: 0;
+}
+
+.error-message {
+    color: #dc3545;
+    margin-bottom: 10px;
+}
+
+.success-message {
+    color: #28a745;
+    margin-bottom: 10px;
+}
+
+.select2-container--bootstrap-5 .select2-selection {
+    border: none !important;
+}
+
+span.stat-breakdown {
+    font-size: 14px;
+    margin-left: 11px;
+    color: green;
+}
+
+a.view-link {
+    color: #0b0a63;
+}
+
+.accordion-button:not(.collapsed):hover {
+    background-color: #d4e3f3;
+    color: #0b0a63;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+}
+
+.accordion-button {
+    background-color: #f8f9fa;
+    color: #343a40;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.accordion-button:hover {
+    background-color: #b0d8ff;
+    color: #0b0a63;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #c6dcf3;
+    color: #000;
+}
+/* Custom styles for the interview schedule modal */
+#scheduleInterviewModal .form-control {
+    width: 95%;
+}
+
+#scheduleInterviewModal .select2-container {
+    width: 100% !important;
+}
+
+#scheduleInterviewModal .select2-search__field {
+    width: 100% !important;
+}
+
+.select2-container--default .select2-selection--multiple{
+    border: none !important;
+}
+
+.scroll-container {
+  width: 100%;
+  height: auto;    
+  min-height: 200px;
+  overflow-y: scroll;    
+  overflow-x: auto;         
+  -ms-overflow-style: none; 
+  scrollbar-width: none;    
+}
+
+.scroll-container::-webkit-scrollbar:vertical {
+  display: none;
+}

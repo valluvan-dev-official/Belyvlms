@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Company List{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/theme.css' %}">
+<link rel="stylesheet" href="{% static 'css/list_pages.css' %}">
+<style>
+    .accordion-row {
+        cursor: pointer;
+    }
+    .accordion-content {
+        display: none;
+        background-color: #f9f9f9;
+    }
+    .accordion-content td {
+        padding: 15px;
+    }
+    .student-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .student-table th, .student-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    .student-table th {
+        background-color: #f2f2f2;
+    }
+   .progress-cell {
+       padding: 0.5rem;
+       border-radius: 0.25rem;
+       color: #fff;
+       text-align: center;
+       font-weight: 500;
+   }
+   .progress-resume_shared { background-color: #a8d8ea; color: #1a5276; }
+   .progress-interview_scheduling { background-color: #f9e79f; color: #7d6608; }
+   .progress-interview_not_conducted { background-color: #f5b7b1; color: #78281f; }
+   .progress-interview_completed { background-color: #a9dfbf; color: #196f3d; }
+   
+   /* Resume shared status colors */
+   .status-pending { background-color: #ff4d4d; color: #fff; }
+   .status-position_closed { background-color: #bd61ff; color: #fff; }
+   .status-not_shortlisted { background-color: #f39c12; color: #fff; }
+   .status-no_response { background-color: #3498db; color: #fff; }
+   .status-interview_stage { background-color: #0a446b; color: #fff; }
+   
+   .progress-resume-shared-special {
+    color: #fff;                 
+   }
+   
+   /* Stack cell scrollable */
+   .stack-cell {
+       max-width: 200px !important;
+       max-height: 60px !important;
+       overflow-x: auto;
+       word-break: break-word;
+       word-wrap: break-word;
+   }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="list-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fas fa-building me-2"></i>Company List</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'company_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Add New Company
+            </a>
+        </div>
+    </div>
+
+    <form method="get" class="filters">
+        <div class="filter-row">
+            <div class="filter-group">
+                {{ form.q.label_tag }}
+                {{ form.q }}
+            </div>
+            <div class="filter-group">
+                {{ form.progress.label_tag }}
+                {{ form.progress }}
+            </div>
+            <div class="filter-group">
+                {{ form.resume_shared_status.label_tag }}
+                {{ form.resume_shared_status }}
+            </div>
+            <div class="filter-group">
+                {{ form.company_stack.label_tag }}
+                {{ form.company_stack }}
+            </div>
+        </div>
+        <div class="filter-row">
+            <div class="filter-group">
+                {{ form.location.label_tag }}
+                {{ form.location }}
+            </div>
+            <div class="filter-group">
+                {{ form.created_by.label_tag }}
+                {{ form.created_by }}
+            </div>
+            <div class="filter-group">
+                {{ form.created_from.label_tag }}
+                {{ form.created_from }}
+            </div>
+            <div class="filter-group">
+                {{ form.created_to.label_tag }}
+                {{ form.created_to }}
+            </div>
+            <div class="filter-group">
+                {{ form.updated_from.label_tag }}
+                {{ form.updated_from }}
+            </div>
+            <div class="filter-group">
+                {{ form.updated_to.label_tag }}
+                {{ form.updated_to }}
+            </div>
+            <div class="filter-group">
+                {{ form.interview_from.label_tag }}
+                {{ form.interview_from }}
+            </div>
+            <div class="filter-group">
+                {{ form.interview_to.label_tag }}
+                {{ form.interview_to }}
+            </div>
+        </div>
+             <div class="filter-group" style="flex: 2;"></div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">Apply Filters</button>
+            <a href="{% url 'company_list' %}" class="btn btn-secondary">Reset</a>
+        </div>
+    </form>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Company Code</th>
+                    <th>Company Name</th>
+                    <th>Portal</th>
+                    <th>SPOC</th>
+                    <th>Mobile</th>
+                    <th>Email</th>
+                    <th>Location</th>
+                    <th>Stack</th>
+                    <th>Progress</th>
+                    <th>Updated</th>
+                    <th>Created By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for company in companies %}
+                <tr class="{% if company.progress == 'interview_completed' and company.placed_students or company.progress == 'resume_shared' or company.has_resume_shared_statuses %}accordion-row{% endif %}">
+                    <td>{{ company.company_code }}</td>
+                    <td>{{ company.company_name }}</td>
+                    <td>
+                        {% if company.portal == 'others' %}
+                            {{ company.portal|capfirst}} - {{ company.other_portal }}
+                        {% else %}
+                            {{ company.portal|capfirst }}
+                        {% endif %}
+                    </td>
+                    <td>{{ company.spoc }}</td>
+                    <td>{{ company.mobile }}</td>
+                    <td>{{ company.email }}</td>
+                    <td>{{ company.location|capfirst }}</td>
+                    <td class="stack-cell scroll-container">
+                        {% if company.unique_courses %}
+                            {{ company.unique_courses|join:", " }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if company.has_resume_shared_statuses and company.progress == 'resume_shared' %}
+                            {% with latest_status=company.resume_shared_statuses.all.0 %}
+                            <span class="progress-cell progress-resume-shared-special status-{{ latest_status.status }}">
+                                RS&#8594;{{ latest_status.get_status_display }}
+                            </span>
+                            {% endwith %}
+                        {% else %}
+                            <span class="progress-cell progress-{{ company.progress }}">
+                                {{ company.get_progress_display }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if company.latest_update_at %}
+                            {{ company.latest_update_at }}
+                            {% if company.latest_updated_by %}
+                                &nbsp;by {{ company.latest_updated_by.name|capfirst }}
+                            {% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td>{{ company.created_at }} by {{ company.created_by.name }}</td>
+                    <td>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <a href="{% url 'company_update' company.pk %}" class="btn btn-update btn-sm"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'company_delete' company.pk %}" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>
+                        </div>
+                    </td>
+                </tr>
+                {% if company.progress == 'interview_completed' and company.placed_students %}
+                    <tr class="accordion-content">
+                        <td colspan="11">
+                            <h5>Placed Students</h5>
+                            <table class="student-table">
+                                <thead>
+                                    <tr>
+                                        <th>Student Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Role</th>
+                                        <th>Offer Letter</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for interview_student in company.placed_students %}
+                                    <tr>
+                                        <td>{{interview_student.student.student_id}} - {{ interview_student.student.first_name }} {{ interview_student.student.last_name }}</td>
+                                        <td>{{ interview_student.student.email }}</td>
+                                        <td>{{ interview_student.student.phone }}</td>
+                                        <!-- <td>{{ interview_student.interview.applying_role }} (Cycle {{ interview_student.interview.cycle_number }} - Round {{ interview_student.interview.round_number }})</td> -->
+                                        <td>{{ interview_student.interview.applying_role }}</td>
+                                        <td>
+                                            {% if interview_student.status == 'placed' and interview_student.offer_letter %}
+                                                <a href="{{ interview_student.offer_letter.url }}" class="view-link" target="_blank">View</a>
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                {% endif %} 
+                {% if company.has_resume_shared_statuses %}
+                    <tr class="accordion-content">
+                        <td colspan="11">
+                            <h5>Resume Shared Status History</h5>
+                            <table class="student-table">
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th>Status</th>
+                                        <th>Role</th>
+                                        <th>Course</th>
+                                        <th>Resumes Shared</th>
+                                        <th>Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if company.resume_shared_statuses.all %}
+                                        {% for status in company.resume_shared_statuses.all %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td><span class="status-badge status-{{ status.status }}">{{ status.get_status_display }}</span></td>
+                                            <td>{{ status.role }}</td>
+                                            <td>
+                                                    {% if status.courses.exists %}
+                                                        {% for course in status.courses.all %}
+                                                        {{ course.course_name }}{% if not forloop.last %}, {% endif %}
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                            </td>
+                                            <td>{{ status.resumes_shared }}</td>
+                                            <td><span style="color: #0a446b; margin-right: 2px;">{{ status.created_by.name }}</span>-{{ status.created_at }}</td>
+                                            <td>
+                                                <a href="{% url 'edit_resume_shared_status' status_pk=status.id %}" class="btn btn-update btn-sm"><i class="fas fa-edit"></i></a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted">
+                                                No statuses yet
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                {% endif %} 
+            {% empty %}
+                <tr><td colspan="12" class="text-center py-4 text-muted">
+                        <i class="fas fa-building me-2"></i>No companies found.
+                    </td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination">
+        <span class="step-links">
+            {% if companies.has_previous %}
+                <a href="?page=1&{{ query_params }}">&laquo; first</a>
+                <a href="?page={{ companies.previous_page_number }}&{{ query_params }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ companies.number }} of {{ companies.paginator.num_pages }}.
+            </span>
+
+            {% if companies.has_next %}
+                <a href="?page={{ companies.next_page_number }}&{{ query_params }}">next</a>
+                <a href="?page={{ companies.paginator.num_pages }}&{{ query_params }}">last &raquo;</a>
+            {% endif %}
+        </span>
+        <form method="get" class="page-search">
+            <input type="number" name="page" min="1" max="{{ companies.paginator.num_pages }}" placeholder="Page">
+            <input type="hidden" name="q" value="{{ request.GET.q }}">
+            <input type="hidden" name="progress" value="{{ request.GET.progress }}">
+            <input type="hidden" name="resume_shared_status" value="{{ request.GET.resume_shared_status }}">
+            <input type="hidden" name="domain" value="{{ request.GET.domain }}">
+            <input type="hidden" name="location" value="{{ request.GET.location }}">
+            <input type="hidden" name="created_by" value="{{ request.GET.created_by }}">
+            <input type="hidden" name="created_from" value="{{ request.GET.created_from }}">
+            <input type="hidden" name="created_to" value="{{ request.GET.created_to }}">
+            <input type="hidden" name="updated_from" value="{{ request.GET.updated_from }}">
+            <input type="hidden" name="updated_to" value="{{ request.GET.updated_to }}">
+            <input type="hidden" name="interview_from" value="{{ request.GET.interview_from }}">
+            <input type="hidden" name="interview_to" value="{{ request.GET.interview_to }}">
+            <button type="submit" class="btn btn-primary btn-sm">Go</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize accordion
+    const accordionRows = document.querySelectorAll('.accordion-row');
+    accordionRows.forEach(row => {
+        row.addEventListener('click', function() {
+            const content = this.nextElementSibling;
+            if (content && content.classList.contains('accordion-content')) {
+                content.style.display = content.style.display === 'table-row' ? 'none' : 'table-row';
+            }
+        });
+    });
+
+    // Initialize Select2
+    $('.select2').select2({
+        placeholder: "Select courses",
+        allowClear: true,
+        width: '100%'
+    });
+});
+</script>
+{% endblock %}

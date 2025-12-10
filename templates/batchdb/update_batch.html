@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Update Batch{% endblock %}
+{% load static %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="{% static 'css/student_form_modern.css' %}">
+<style>
+/* Center align all table headers and cells horizontally and vertically */
+.table th,
+.table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Center text inside inputs and selects used within the table */
+.table input.form-control[type="number"] {
+    text-align: center;
+}
+.table select.form-control {
+    text-align: center;
+    text-align-last: center; /* Center the selected option text in modern browsers */
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="student-form-container">
+    <div class="form-header">
+        <h1>Update Batch - {{ batch.batch_id }}</h1>
+        <p class="form-subtitle">Modify the details for this batch.</p>
+    </div>
+
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Please correct the errors below:</strong>
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <li>{{ field|title }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <form method="post" class="student-form" id="batch-form">
+        {% csrf_token %}
+        <div class="form-section-card">
+            <div class="form-section-header">
+                <h5 style="color: white;"><i class="fas fa-cubes me-2"></i>Batch Details</h5>
+            </div>
+            <div class="form-section-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_batch_status">Batch Status</label>
+                            {{ form.batch_status }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_batch_percentage">Batch Percentage</label>
+                            {{ form.batch_percentage }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="id_end_date">End Date</label>
+                            {{ form.end_date }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Students Details Section -->
+        <div class="form-section-card">
+            <div class="form-section-header">
+                <h5 style="color: white;"><i class="fas fa-user-graduate me-2"></i>Students Details (Active)</h5>
+            </div>
+            <div class="form-section-body">
+                {% if active_batch_students %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Course %</th>
+                                <th>Course Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bs in active_batch_students %}
+                                {% with student=bs.student %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'student_report' student.student_id %}" class="view-link">{{ student.student_id }}</a>
+                                    </td>
+                                    <td>{{ student.first_name }}{% if student.last_name %} {{ student.last_name }}{% endif %}</td>
+                                    <td>{{ student.phone }}</td>
+                                    <td style="max-width: 140px;">
+                                        <input type="number"
+                                               name="student_{{ student.id }}_percentage"
+                                               class="form-control"
+                                               step="0.01"
+                                               min="0"
+                                               max="100"
+                                               value="{{ student.course_percentage }}"
+                                               placeholder="0-100">
+                                    </td>
+                                    <td style="min-width: 180px;">
+                                        <select name="student_{{ student.id }}_status" class="form-control">
+                                            {% for key,label in course_status_choices %}
+                                                <option value="{{ key }}" {% if student.course_status == key %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
+                                {% endwith %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <p>No active students found for this batch.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Update Batch</button>
+            <a href="{% url 'batchdb:batch_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+{% endblock %}
