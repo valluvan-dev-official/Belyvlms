@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import os
+import datetime
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -17,7 +18,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-g7ccbck23uiam(
 # --- PRODUCTION SETTINGS ---
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
-ALLOWED_HOSTS = ['btrees.in', 'admin.btrees.in']
+ALLOWED_HOSTS = ['btrees.in', 'admin.btrees.in',"*"]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
@@ -42,11 +43,20 @@ INSTALLED_APPS = [
     'coursedb',
     'django_select2',
     'core',
+    'tempDb',
+    'rest_framework',
+    'drf_yasg',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
+    # 'access_control',
+    'rbac',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -55,6 +65,16 @@ MIDDLEWARE = [
     'accounts.middleware.RoleBasedRedirectMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_HEADERS = ['*']
+CORS_ALLOW_METHODS = ['*']
+CORS_ALLOW_CREDENTIALS = True
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://dissimilar-madyson-uncriticisably.ngrok-free.dev",
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -75,6 +95,43 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core.wsgi.application'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(days=60),
+    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+        }
+    },
+    'USE_SESSION_AUTH': False,
+    'JSON_EDITOR': True,
+    'DEFAULT_MODEL_RENDERING': 'example'
+}
+
+
+SWAGGER_SETTINGS['SUPPORTED_SUBMIT_METHODS'] = ['get', 'post', 'put', 'patch', 'delete']
+SWAGGER_SETTINGS['URL_PROTOCOL'] = 'https'
 
 
 # Database configuration from environment variables
@@ -113,9 +170,9 @@ STATIC_URL = 'static/'
 
 
 # A list of directories where Django will look for your project's source static files.
-# STATICFILES_DIRS = [
-#     os.path.join(BASE_DIR, 'static'),
-# ]
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
 
 # --- MEDIA FILES CONFIGURATION (User-uploaded content) ---
@@ -140,12 +197,12 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'xaiqetsigdskrwqn')
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', 'btreesystem@gmail.com')
 
 # for developement
-# DEBUG = True
-# ALLOWED_HOSTS = ['*']
+DEBUG = True
+ALLOWED_HOSTS = ['*']
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
