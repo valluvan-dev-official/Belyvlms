@@ -1,7 +1,14 @@
 from django.db import models
+from django.conf import settings
 from coursedb.models import Course
 
 class Trainer(models.Model):
+    # --- TRINITY ARCHITECTURE: IDENTITY LINK ---
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='trainer_profile_link', null=True, blank=True)
+    
+    # --- TRINITY ARCHITECTURE: DYNAMIC DATA ---
+    extra_data = models.JSONField(default=dict, blank=True, help_text="Stores dynamic profile fields defined in Admin")
+
     EMPLOYMENT_TYPE_CHOICES = [
         ('FT', 'Full Time'),
         ('FL', 'Freelancer'),

@@ -1,5 +1,6 @@
 from django.urls import path, include
 from . import views
+from rbac.decorators import rbac_required
 
 app_name = 'coursedb'
 
@@ -14,6 +15,12 @@ urlpatterns = [
     path('courses/export/', views.export_courses_csv, name='export_courses_csv'),
     path('courses/import/', views.import_courses_csv, name='import_courses_csv'),
     path('courses/download_sample_csv/', views.download_sample_csv, name='download_sample_csv'),
+
+    # --- Enterprise RBAC Routes (Secure Zone) ---
+    path('secure/courses/', rbac_required('COURSE_VIEW')(views.course_list), name='rbac_course_list'),
+    path('secure/courses/create/', rbac_required('COURSE_CREATE')(views.course_create), name='rbac_course_create'),
+    path('secure/courses/<int:pk>/update/', rbac_required('COURSE_UPDATE')(views.course_update), name='rbac_course_update'),
+    path('secure/courses/<int:pk>/delete/', rbac_required('COURSE_DELETE')(views.course_delete), name='rbac_course_delete'),
 
     # Course Category URLs
     path('categories/', views.category_list, name='category_list'),

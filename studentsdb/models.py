@@ -1,10 +1,17 @@
 from django.db import models
 from django.utils import timezone
+from django.conf import settings
 from consultantdb.models import Consultant
 from settingsdb.models import SourceOfJoining
 from .field_choices import DEGREE_CHOICES, BRANCH_CHOICES
  
 class Student(models.Model):
+    # --- TRINITY ARCHITECTURE: IDENTITY LINK ---
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='student_profile', null=True, blank=True)
+    
+    # --- TRINITY ARCHITECTURE: DYNAMIC DATA ---
+    extra_data = models.JSONField(default=dict, blank=True, help_text="Stores dynamic profile fields defined in Admin")
+
     MODE_CHOICES = [
         ('ON', 'Online'),
         ('OFF', 'Offline'),

@@ -37,10 +37,12 @@ urlpatterns = [
     path('placement-drive/', include('placementdrive.urls')),
     path('api/', include('coursedb.api_urls')),
     path('api/', include('batchdb.api_urls')),
+    path('api/', include('trainersdb.api_urls')),
 
     path('api/', include('tempDb.urls')),
     path('api/', include('accounts.api_urls')),
     path('api/rbac/', include('rbac.api_urls')),
+    path('api/profiles/', include('profiles.api_urls')),
     # path('api/rbac/', include('access_control.urls')),
     # path('api/auth/login/', RBACTokenObtainPairView.as_view(), name='token_obtain_pair'),
     # path('api/auth/login/refresh/', RBACTokenRefreshView.as_view(), name='token_refresh'),

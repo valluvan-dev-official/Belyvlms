@@ -1,5 +1,6 @@
 from django.urls import path, include
 from . import views
+from rbac.decorators import rbac_required
 
 app_name = 'batchdb'
 
@@ -22,6 +23,13 @@ urlpatterns = [
     path('handover-requests/', views.view_handover_requests, name='view_handover_requests'),
     path('handover-requests/<int:pk>/update/', views.update_handover_status, name='update_handover_status'),
     
+    # --- Enterprise RBAC Routes (Secure Zone) ---
+    path('secure/list/', rbac_required('BATCH_VIEW')(views.batch_list), name='rbac_batch_list'),
+    path('secure/create/', rbac_required('BATCH_CREATE')(views.create_batch), name='rbac_create_batch'),
+    path('secure/<int:pk>/update/', rbac_required('BATCH_UPDATE')(views.update_batch), name='rbac_update_batch'),
+    path('secure/<int:pk>/delete/', rbac_required('BATCH_UPDATE')(views.delete_batch), name='rbac_delete_batch'),
+    path('secure/handover-requests/', rbac_required('BATCH_ASSIGN')(views.view_handover_requests), name='rbac_view_handover_requests'),
+
     # Student history report
     path('student/history/', views.student_batch_history, name='student-batch-history'),
 
