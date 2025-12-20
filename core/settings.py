@@ -74,9 +74,9 @@ CORS_ALLOW_METHODS = ['*']
 CORS_ALLOW_CREDENTIALS = True
 
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://dissimilar-madyson-uncriticisably.ngrok-free.dev",
-]
+# CSRF_TRUSTED_ORIGINS = [
+#     "https://dissimilar-madyson-uncriticisably.ngrok-free.dev",
+# ]
 
 ROOT_URLCONF = 'core.urls'
 
@@ -138,12 +138,12 @@ SWAGGER_SETTINGS['URL_PROTOCOL'] = 'https'
 # Database configuration from environment variables
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.postgresql'),
-        'NAME': os.environ.get('DB_NAME', 'btree_db'),
-        'USER': os.environ.get('DB_USER', 'btree_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'BTree@2025'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'ENGINE': os.environ.get('DB_ENGINE'),
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST'),
+        'PORT': os.environ.get('DB_PORT'),
     }
 }
 
@@ -190,12 +190,12 @@ LOGOUT_REDIRECT_URL = 'login'
 
 # Email Configuration from environment variables
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_HOST = os.environ.get('EMAIL_HOST')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT'))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'btreesystem@gmail.com')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'xaiqetsigdskrwqn')
-DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', 'btreesystem@gmail.com')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER')
 
 # for developement
 # DEBUG = True
