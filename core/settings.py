@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'core',
     'tempDb',
     'rest_framework',
+    'django_filters',
     'drf_yasg',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
@@ -170,10 +171,6 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 
-# A list of directories where Django will look for your project's source static files.
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
 
 
 # --- MEDIA FILES CONFIGURATION (User-uploaded content) ---
@@ -197,7 +194,7 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER')
 
-# for developement
+# # for developement
 # DEBUG = True
 # ALLOWED_HOSTS = ['*']
 
@@ -207,3 +204,9 @@ DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER')
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+
+
+# # A list of directories where Django will look for your project's source static files.
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'static'),
+# ]

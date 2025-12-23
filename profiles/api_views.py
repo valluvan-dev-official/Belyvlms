@@ -1,25 +1,64 @@
-from rest_framework import generics, status, views
+from rest_framework import viewsets, generics, status, views
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.utils.decorators import method_decorator
+from django_filters.rest_framework import DjangoFilterBackend
 
 from rbac.permissions import HasRBACPermission
-from .models import RoleProfileConfig
-from .serializers import RoleProfileConfigSerializer, OnboardingSerializer
+from .models import RoleProfileConfig, ProfileFieldDefinition
+from .serializers import RoleProfileConfigSerializer, ProfileFieldDefinitionSerializer, OnboardingSerializer, UserSerializer
 from .services import OnboardingService
+from accounts.models import CustomUser
 
-@method_decorator(name='get', decorator=swagger_auto_schema(tags=["Profiles Config"]))
-class RoleProfileConfigListView(generics.ListAPIView):
+@method_decorator(name='list', decorator=swagger_auto_schema(tags=["Profiles Config"]))
+@method_decorator(name='create', decorator=swagger_auto_schema(tags=["Profiles Config"]))
+@method_decorator(name='retrieve', decorator=swagger_auto_schema(tags=["Profiles Config"]))
+@method_decorator(name='update', decorator=swagger_auto_schema(tags=["Profiles Config"]))
+@method_decorator(name='partial_update', decorator=swagger_auto_schema(tags=["Profiles Config"]))
+@method_decorator(name='destroy', decorator=swagger_auto_schema(tags=["Profiles Config"]))
+class RoleProfileConfigViewSet(viewsets.ModelViewSet):
     """
-    List all Role Profile Configurations.
-    Useful for frontend to know which fields to render for a given role.
+    Manage Role Profile Configurations.
+    Admin can define which roles use Generic Profiles vs Dedicated Models.
     """
     queryset = RoleProfileConfig.objects.all()
     serializer_class = RoleProfileConfigSerializer
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'PROFILE_CONFIG_VIEW'
+    required_permission = 'PROFILE_CONFIG_MANAGE' # Needs to be added to RBAC seeds
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            self.required_permission = 'PROFILE_CONFIG_VIEW'
+        else:
+            self.required_permission = 'PROFILE_CONFIG_MANAGE'
+        return super().get_permissions()
+
+@method_decorator(name='list', decorator=swagger_auto_schema(tags=["Profiles Config Fields"]))
+@method_decorator(name='create', decorator=swagger_auto_schema(tags=["Profiles Config Fields"]))
+@method_decorator(name='retrieve', decorator=swagger_auto_schema(tags=["Profiles Config Fields"]))
+@method_decorator(name='update', decorator=swagger_auto_schema(tags=["Profiles Config Fields"]))
+@method_decorator(name='partial_update', decorator=swagger_auto_schema(tags=["Profiles Config Fields"]))
+@method_decorator(name='destroy', decorator=swagger_auto_schema(tags=["Profiles Config Fields"]))
+class ProfileFieldDefinitionViewSet(viewsets.ModelViewSet):
+    """
+    Manage Dynamic Fields for a Role Configuration.
+    Example: Add 'University Name' to 'Guest Lecturer' role.
+    """
+    queryset = ProfileFieldDefinition.objects.all()
+    serializer_class = ProfileFieldDefinitionSerializer
+    permission_classes = [IsAuthenticated, HasRBACPermission]
+    required_permission = 'PROFILE_CONFIG_MANAGE'
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['config'] # Allow filtering by config ID
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            self.required_permission = 'PROFILE_CONFIG_VIEW'
+        else:
+            self.required_permission = 'PROFILE_CONFIG_MANAGE'
+        return super().get_permissions()
 
 @method_decorator(name='post', decorator=swagger_auto_schema(
     tags=["Onboarding"],
@@ -64,3 +103,21 @@ class OnboardingView(views.APIView):
             
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@method_decorator(name='list', decorator=swagger_auto_schema(tags=["User Management"]))
+@method_decorator(name='retrieve', decorator=swagger_auto_schema(tags=["User Management"]))
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    List and Retrieve Users.
+    Used by Frontend Service Layer to display user lists.
+    """
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, HasRBACPermission]
+    required_permission = 'USER_VIEW'
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['role', 'is_active', 'email']
+
+    def get_queryset(self):
+        # Optional: Filter by role if passed in query params (handled by DjangoFilterBackend)
+        return CustomUser.objects.all().order_by('-id')

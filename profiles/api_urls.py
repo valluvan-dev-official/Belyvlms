@@ -1,7 +1,13 @@
-from django.urls import path
-from .api_views import RoleProfileConfigListView, OnboardingView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .api_views import RoleProfileConfigViewSet, ProfileFieldDefinitionViewSet, OnboardingView, UserViewSet
+
+router = DefaultRouter()
+router.register(r'configs', RoleProfileConfigViewSet, basename='profile-config')
+router.register(r'fields', ProfileFieldDefinitionViewSet, basename='profile-field')
+router.register(r'users', UserViewSet, basename='profile-user')
 
 urlpatterns = [
-    path('configs/', RoleProfileConfigListView.as_view(), name='profile-configs'),
     path('onboard/', OnboardingView.as_view(), name='user-onboard'),
+    path('', include(router.urls)),
 ]

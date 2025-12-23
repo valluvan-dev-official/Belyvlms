@@ -1,10 +1,16 @@
 from rest_framework import serializers
 from .models import RoleProfileConfig, ProfileFieldDefinition, GenericProfile
+from accounts.models import CustomUser
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'email', 'name', 'role', 'is_active', 'last_login']
 
 class ProfileFieldDefinitionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProfileFieldDefinition
-        fields = ['id', 'name', 'label', 'field_type', 'is_required', 'options']
+        fields = ['id', 'config', 'name', 'label', 'field_type', 'is_required', 'options']
 
 class RoleProfileConfigSerializer(serializers.ModelSerializer):
     dynamic_fields = ProfileFieldDefinitionSerializer(many=True, read_only=True)
@@ -28,8 +34,5 @@ class OnboardingSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
     role_code = serializers.CharField(max_length=50)
     
-    # Static profile data (e.g., student_id, phone for specific models)
     profile_data = serializers.DictField(required=False, default=dict)
-    
-    # Dynamic profile data (JSON for extra_data)
     extra_data = serializers.DictField(required=False, default=dict)

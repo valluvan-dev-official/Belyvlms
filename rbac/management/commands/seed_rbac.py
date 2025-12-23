@@ -59,6 +59,11 @@ class Command(BaseCommand):
             ('RBAC_ROLE_MANAGE', 'Manage Roles', 'RBAC Core'),
             ('RBAC_PERMISSION_MANAGE', 'Manage Permissions', 'RBAC Core'),
             ('RBAC_PERMISSION_ASSIGN', 'Assign Permissions to Roles', 'RBAC Assignments'),
+
+            # Profile & Onboarding
+            ('USER_ONBOARD', 'Onboard New User (Trinity)', 'User Management'),
+            ('PROFILE_CONFIG_VIEW', 'View Profile Configurations', 'Profile Config'),
+            ('PROFILE_CONFIG_MANAGE', 'Manage Profile Configurations', 'Profile Config'),
         ]
 
         self.stdout.write("Seeding Permissions...")
@@ -93,11 +98,15 @@ class Command(BaseCommand):
 
         # 3. Assign RBAC Permissions to ADMIN Role (Bootstrap)
         admin_role = Role.objects.get(code='ADMIN')
-        rbac_perms = Permission.objects.filter(code__startswith='RBAC_')
         
-        for perm in rbac_perms:
+        # Assign RBAC_, USER_ONBOARD, and PROFILE_ permissions to ADMIN
+        admin_perms = Permission.objects.filter(
+            code__regex=r'^(RBAC_|USER_ONBOARD|PROFILE_)'
+        )
+        
+        for perm in admin_perms:
             RolePermission.objects.get_or_create(role=admin_role, permission=perm)
         
-        self.stdout.write("Assigned RBAC Permissions to ADMIN Role")
+        self.stdout.write("Assigned Admin Permissions to ADMIN Role")
 
         self.stdout.write(self.style.SUCCESS('Successfully seeded FULL Project RBAC data!'))
