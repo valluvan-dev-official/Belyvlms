@@ -118,11 +118,18 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
+# Force Django to trust Nginx HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+USE_X_FORWARDED_HOST = True
+
+
+
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
         'Bearer': {
             'type': 'apiKey',
-            'name': 'Authorization',
+            'name': 'Authorization', 
             'in': 'header',
         }
     },
@@ -133,7 +140,7 @@ SWAGGER_SETTINGS = {
 
 
 SWAGGER_SETTINGS['SUPPORTED_SUBMIT_METHODS'] = ['get', 'post', 'put', 'patch', 'delete']
-SWAGGER_SETTINGS['URL_PROTOCOL'] = 'https'
+# SWAGGER_SETTINGS['URL_PROTOCOL'] = 'https' # comment in production
 
 
 # Database configuration from environment variables
