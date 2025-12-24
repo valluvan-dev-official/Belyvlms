@@ -1,5 +1,5 @@
+from .models import UserRole, RolePermission, Permission
 from django.core.cache import cache
-from .models import UserRole, RolePermission
 
 def get_user_permissions(user):
     """
@@ -21,7 +21,15 @@ def get_user_permissions(user):
     if cached_perms is not None:
         return cached_perms
 
-    # 1. Fetch User's Role (Optimized)
+    # 1. Superuser Bypass (God Mode)
+    # If the user is a superuser, they implicitly have ALL permissions defined in the system.
+    if user.is_superuser:
+        all_perms = list(Permission.objects.values_list('code', flat=True))
+        # Cache this list as well
+        cache.set(cache_key, all_perms, 60 * 60)
+        return all_perms
+
+    # 2. Fetch User's Role (Optimized)
     try:
         user_role = UserRole.objects.select_related('role').get(user=user)
         role = user_role.role

@@ -19,7 +19,13 @@ class HasRBACPermission(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
-        # 2. Check if the view has a 'required_permission' attribute
+        # 2. Superuser Bypass (God Mode)
+        # In Enterprise systems, the "root" or "superuser" typically has implied full access.
+        # This prevents lockout scenarios where no role has permission to assign permissions.
+        if request.user.is_superuser:
+            return True
+
+        # 3. Check if the view has a 'required_permission' attribute
         required_perm = getattr(view, 'required_permission', None)
         
         if not required_perm:

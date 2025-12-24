@@ -34,5 +34,8 @@ class OnboardingSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
     role_code = serializers.CharField(max_length=50)
     
+    # Optional flags for admin creation
+    is_superuser = serializers.BooleanField(required=False, default=False)
+    
     profile_data = serializers.DictField(required=False, default=dict)
     extra_data = serializers.DictField(required=False, default=dict)

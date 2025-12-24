@@ -12,7 +12,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 schema_view = get_schema_view(
     openapi.Info(
-        title = "Temp_Student API",
+        title = "Belyvlms API",
         default_version = 'v1',
         description = "API for Belyvlms App",
         contact = openapi.Contact(email = "support@example.com")

@@ -84,6 +84,19 @@ class OnboardingView(views.APIView):
         serializer.is_valid(raise_exception=True)
         
         data = serializer.validated_data
+
+        # Security Check: Superuser Privilege Escalation Prevention
+        # If the request asks to make a user a 'superuser' or 'staff', ensure the requestor IS a superuser.
+        # Currently, OnboardingSerializer does not expose 'is_superuser' or 'is_staff'.
+        # However, we must ensure 'role_code' logic doesn't implicitly grant it.
+        
+        # If we later add 'is_superuser' to serializer, this check is mandatory:
+        is_superuser_request = data.get('is_superuser', False)
+        if is_superuser_request and not request.user.is_superuser:
+             return Response(
+                 {"detail": "Only an existing Superuser can create another Superuser."},
+                 status=status.HTTP_403_FORBIDDEN
+             )
         
         try:
             user = OnboardingService.onboard_user(
@@ -92,7 +105,9 @@ class OnboardingView(views.APIView):
                 password=data['password'],
                 role_code=data['role_code'],
                 profile_data=data.get('profile_data'),
-                extra_data=data.get('extra_data')
+                extra_data=data.get('extra_data'),
+                # Explicitly pass these based on request or default to False
+                is_superuser=is_superuser_request
             )
             
             return Response({
