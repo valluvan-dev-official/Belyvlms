@@ -175,7 +175,7 @@ USE_TZ = True
 
 # --- STATIC FILES CONFIGURATION ---
 # The URL to use when referring to static files located in STATIC_ROOT.
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 # A list of directories where Django will look for your project's source static files.
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
