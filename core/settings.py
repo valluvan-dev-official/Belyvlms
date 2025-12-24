@@ -176,7 +176,10 @@ USE_TZ = True
 # --- STATIC FILES CONFIGURATION ---
 # The URL to use when referring to static files located in STATIC_ROOT.
 STATIC_URL = 'static/'
-
+# A list of directories where Django will look for your project's source static files.
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
 
 
@@ -202,18 +205,15 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER')
 
 # # for developement
-# DEBUG = True
-# ALLOWED_HOSTS = ['*']
+DEBUG = True
+ALLOWED_HOSTS = ['*']
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 
-# # A list of directories where Django will look for your project's source static files.
-# STATICFILES_DIRS = [
-#     os.path.join(BASE_DIR, 'static'),
-# ]
+
