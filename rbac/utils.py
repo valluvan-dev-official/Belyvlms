@@ -44,5 +44,8 @@ def has_permission(user, permission_code):
     """
     Utility to check if a user has a specific permission.
     """
+    if user.is_superuser:
+        return True
+
     perms = get_user_permissions(user)
     return permission_code in perms

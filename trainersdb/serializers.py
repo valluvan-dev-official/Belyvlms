@@ -4,6 +4,7 @@ from coursedb.models import Course
 
 class TrainerSerializer(serializers.ModelSerializer):
     stack_details = serializers.SerializerMethodField()
+    profile_picture = serializers.ImageField(source='user.profile_picture', read_only=True)
     
     class Meta:
         model = Trainer
@@ -11,4 +12,4 @@ class TrainerSerializer(serializers.ModelSerializer):
         read_only_fields = ['trainer_id', 'date_of_joining']
 
     def get_stack_details(self, obj):
-        return [{"id": c.id, "code": c.code, "title": c.title} for c in obj.stack.all()]
+        return [{"id": c.id, "code": c.code, "title": c.course_name} for c in obj.stack.all()]
