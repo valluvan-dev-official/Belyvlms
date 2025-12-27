@@ -20,20 +20,20 @@ jobs:
         run: ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.0.3  
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           script: |
-            cd /var/www/btreeadminportal
-            sudo chown -R deployer:www-data /var/www/btreeadminportal
-            sudo chmod -R 755 /var/www/btreeadminportal
+            cd /var/www/Belyvlms
+            sudo chown -R deployer:www-data /var/www/Belyvlms
+            sudo chmod -R 755 /var/www/Belyvlms
             git reset --hard HEAD
             git pull origin main
             source venv/bin/activate
             pip install -r requirements.txt
             python manage.py migrate
             python manage.py collectstatic --no-input --clear
-            sudo systemctl restart btreeadminportal
+            sudo systemctl restart gunicorn
             sudo systemctl restart nginx

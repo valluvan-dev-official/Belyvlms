@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .api_views import CustomUserViewSet, LogoutView
+from .api_views import CustomUserViewSet, LogoutView, UserMeView
 from .views import trainer_availability_api, trainers_by_course, trainers_availabity
 
 router = DefaultRouter()
@@ -8,6 +8,7 @@ router.register(r'users', CustomUserViewSet, basename='user')
 
 urlpatterns = [
     # Router-managed endpoints for ModelViewSets
+    path('user/me/', UserMeView.as_view(), name='user_me'),
     path('', include(router.urls)),
 
     # Existing function-based JSON endpoints

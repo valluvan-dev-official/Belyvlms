@@ -22,6 +22,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
             user.save()
         return user
 
+class UserMeSerializer(CustomUserSerializer):
+    class Meta(CustomUserSerializer.Meta):
+        read_only_fields = CustomUserSerializer.Meta.read_only_fields + ['role', 'is_active', 'email']
+
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 

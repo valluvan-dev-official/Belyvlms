@@ -312,6 +312,12 @@ def get_students_for_course(request):
     return JsonResponse(student_data, safe=False)
 
 # API ViewSets
+from rest_framework.pagination import PageNumberPagination
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class BatchViewSet(viewsets.ModelViewSet):
     queryset = Batch.objects.all()
@@ -321,6 +327,7 @@ class BatchViewSet(viewsets.ModelViewSet):
     search_fields = ['batch_id', 'course__name', 'trainer__name']
     ordering_fields = ['start_date', 'end_date', 'created_at', 'batch_id']
     ordering = ['-created_at']
+    pagination_class = StandardResultsSetPagination
     
     def get_serializer_class(self):
         if self.action == 'retrieve':

@@ -6,6 +6,12 @@ from django.utils.decorators import method_decorator
 from rbac.permissions import HasRBACPermission
 from .models import Trainer
 from .serializers import TrainerSerializer
+from rest_framework.pagination import PageNumberPagination
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 @method_decorator(name='list', decorator=swagger_auto_schema(tags=["Trainers"]))
 @method_decorator(name='create', decorator=swagger_auto_schema(tags=["Trainers"]))
@@ -21,6 +27,7 @@ class TrainerViewSet(viewsets.ModelViewSet):
     serializer_class = TrainerSerializer
     permission_classes = [IsAuthenticated, HasRBACPermission]
     required_permission = 'TRAINER_VIEW' # Default permission
+    pagination_class = StandardResultsSetPagination
     
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
@@ -31,7 +38,7 @@ class TrainerViewSet(viewsets.ModelViewSet):
         'years_of_experience': ['gte', 'lte'],
     }
     
-    search_fields = ['name', 'email', 'phone_number', 'trainer_id', 'stack__title']
+    search_fields = ['name', 'email', 'phone_number', 'trainer_id', 'stack__course_name']
     ordering_fields = ['years_of_experience', 'date_of_joining', 'name']
 
     def get_permissions(self):

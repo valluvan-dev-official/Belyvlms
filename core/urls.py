@@ -38,6 +38,7 @@ urlpatterns = [
     path('api/', include('coursedb.api_urls')),
     path('api/', include('batchdb.api_urls')),
     path('api/', include('trainersdb.api_urls')),
+    path('api/', include('studentsdb.api_urls')),
 
     path('api/', include('tempDb.urls')),
     path('api/', include('accounts.api_urls')),
