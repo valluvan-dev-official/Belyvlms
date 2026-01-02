@@ -24,6 +24,8 @@ from .permissions import HasRBACPermission
 # usually requires a 'SUPER_ADMIN' permission. 
 # For this example, we assume the user has a permission code 'RBAC_MANAGE'.
 
+from django.db.models import Count
+
 @method_decorator(name='list', decorator=swagger_auto_schema(tags=["RBAC Core"]))
 @method_decorator(name='create', decorator=swagger_auto_schema(tags=["RBAC Core"], request_body=RoleSerializer, consumes=['multipart/form-data']))
 @method_decorator(name='retrieve', decorator=swagger_auto_schema(tags=["RBAC Core"]))
@@ -34,13 +36,45 @@ class RoleViewSet(viewsets.ModelViewSet):
     """
     API Endpoint to Manage Roles (Create, List, Update, Delete).
     """
-    queryset = Role.objects.all()
+    queryset = Role.objects.annotate(user_count=Count('users')).all()
     serializer_class = RoleSerializer
     permission_classes = [IsAuthenticated, HasRBACPermission]
     required_permission = 'RBAC_ROLE_MANAGE' 
 
     def get_queryset(self):
-        return Role.objects.all()
+        return Role.objects.annotate(user_count=Count('users')).all()
+
+    @action(detail=True, methods=['post'], url_path='set_permissions')
+    @swagger_auto_schema(
+        tags=["RBAC Core"], 
+        operation_description="Bulk Set Permissions for a Role (Clears existing and sets new ones)",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'permissions': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="List of Permission CODES (e.g. ['USER_VIEW', 'USER_CREATE'])")
+            },
+            required=['permissions']
+        )
+    )
+    def set_permissions(self, request, pk=None):
+        role = self.get_object()
+        permission_codes = request.data.get('permissions', [])
+        
+        # 1. Fetch Permission Objects
+        perms = Permission.objects.filter(code__in=permission_codes)
+        
+        # 2. Clear Existing
+        role.role_permissions.all().delete()
+        
+        # 3. Bulk Create
+        new_links = [RolePermission(role=role, permission=p) for p in perms]
+        RolePermission.objects.bulk_create(new_links)
+        
+        return Response({
+            "status": "success", 
+            "role": role.code,
+            "permissions_set": len(new_links)
+        })
 
 @method_decorator(name='list', decorator=swagger_auto_schema(tags=["RBAC Core"]))
 @method_decorator(name='create', decorator=swagger_auto_schema(tags=["RBAC Core"], request_body=PermissionSerializer, consumes=['multipart/form-data']))

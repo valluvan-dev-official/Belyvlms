@@ -3,9 +3,11 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import Role, Permission, RolePermission, UserRole
 
 class RoleSerializer(serializers.ModelSerializer):
+    user_count = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Role
-        fields = ['id', 'code', 'name']
+        fields = ['id', 'code', 'name', 'user_count']
 
 class PermissionSerializer(serializers.ModelSerializer):
     class Meta:

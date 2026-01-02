@@ -109,4 +109,56 @@ class Command(BaseCommand):
         
         self.stdout.write("Assigned Admin Permissions to ADMIN Role")
 
+        # 4. Assign Permissions to STUDENT Role
+        student_role = Role.objects.get(code='STUDENT')
+        student_perms = Permission.objects.filter(code__in=[
+            'COURSE_VIEW', 
+            'PROFILE_CONFIG_VIEW',
+        ])
+        for perm in student_perms:
+            RolePermission.objects.get_or_create(role=student_role, permission=perm)
+        self.stdout.write("Assigned Permissions to STUDENT Role")
+            
+        # 5. Assign Permissions to TRAINER Role
+        trainer_role = Role.objects.get(code='TRAINER')
+        trainer_perms = Permission.objects.filter(code__in=[
+            'COURSE_VIEW',
+            'BATCH_VIEW',
+            'TRAINER_AVAILABILITY',
+            'PROFILE_CONFIG_VIEW',
+        ])
+        for perm in trainer_perms:
+            RolePermission.objects.get_or_create(role=trainer_role, permission=perm)
+        self.stdout.write("Assigned Permissions to TRAINER Role")
+
+        # 6. Assign Permissions to PLACEMENT_OFFICER Role
+        po_role = Role.objects.get(code='PLACEMENT_OFFICER')
+        po_perms = Permission.objects.filter(code__in=[
+            'PLACEMENT_VIEW', 'PLACEMENT_CREATE', 'PLACEMENT_UPDATE', 'PLACEMENT_DRIVE_MANAGE',
+            'STUDENT_VIEW', 'PROFILE_CONFIG_VIEW'
+        ])
+        for perm in po_perms:
+            RolePermission.objects.get_or_create(role=po_role, permission=perm)
+        self.stdout.write("Assigned Permissions to PLACEMENT_OFFICER Role")
+
+        # 7. Assign Permissions to BATCH_COORDINATOR Role
+        bc_role = Role.objects.get(code='BATCH_COORDINATOR')
+        bc_perms = Permission.objects.filter(code__in=[
+            'BATCH_VIEW', 'BATCH_CREATE', 'BATCH_UPDATE', 'BATCH_ASSIGN',
+            'TRAINER_VIEW', 'STUDENT_VIEW', 'COURSE_VIEW', 'PROFILE_CONFIG_VIEW'
+        ])
+        for perm in bc_perms:
+            RolePermission.objects.get_or_create(role=bc_role, permission=perm)
+        self.stdout.write("Assigned Permissions to BATCH_COORDINATOR Role")
+
+        # 8. Assign Permissions to STAFF Role (General Staff)
+        staff_role = Role.objects.get(code='STAFF')
+        staff_perms = Permission.objects.filter(code__in=[
+            'USER_VIEW', 'STUDENT_VIEW', 'TRAINER_VIEW', 'BATCH_VIEW', 'COURSE_VIEW', 'PLACEMENT_VIEW', 'PAYMENT_VIEW', 'CONSULTANT_VIEW',
+            'PROFILE_CONFIG_VIEW'
+        ])
+        for perm in staff_perms:
+            RolePermission.objects.get_or_create(role=staff_role, permission=perm)
+        self.stdout.write("Assigned Permissions to STAFF Role")
+
         self.stdout.write(self.style.SUCCESS('Successfully seeded FULL Project RBAC data!'))
