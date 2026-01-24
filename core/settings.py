@@ -11,6 +11,8 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+FRONTEND_BASE_URL = (os.environ.get('FRONTEND_BASE_URL') or os.environ.get('PUBLIC_APP_URL') or '').strip()
+
 # SECURITY WARNING: keep the secret key used in production secret!
 # Load from environment variable
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-g7ccbck23uiam(r(*0-&^57v#94(2^kt#buh!mn$fbq)l8+=$$')

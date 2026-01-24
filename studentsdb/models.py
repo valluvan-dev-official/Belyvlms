@@ -95,10 +95,6 @@ class Student(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.student_id:
-            last_student = Student.objects.order_by('-id').first()
-            if last_student and last_student.student_id:
-                last_id = int(last_student.student_id.replace('BTR', ''))
-                self.student_id = f'BTR{last_id + 1:04d}'
-            else:
-                self.student_id = 'BTR0001'
+            from rbac.services import IDGeneratorService
+            self.student_id = IDGeneratorService.generate_next_id('Student', self.user)
         super().save(*args, **kwargs)

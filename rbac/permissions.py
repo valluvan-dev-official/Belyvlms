@@ -36,4 +36,7 @@ class HasRBACPermission(permissions.BasePermission):
             return True
 
         # 3. Check against RBAC engine
-        return has_permission(request.user, required_perm)
+        # Extract active role from request header if present
+        active_role = request.headers.get('X-Active-Role', None)
+        
+        return has_permission(request.user, required_perm, active_role_code=active_role)

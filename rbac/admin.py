@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Role, Permission, RolePermission, UserRole
+from .models import Role, Permission, RolePermission, UserRole, OnboardRequest
 from .forms import RolePermissionForm, RoleForm
 
 @admin.register(Role)
@@ -53,3 +53,11 @@ class UserRoleAdmin(admin.ModelAdmin):
     list_filter = ('role', 'assigned_at')
     search_fields = ('user__email', 'role__name')
     autocomplete_fields = ['user', 'role']
+
+
+@admin.register(OnboardRequest)
+class OnboardRequestAdmin(admin.ModelAdmin):
+    list_display = ('code', 'email', 'role', 'status', 'created_at', 'submitted_at', 'approved_at')
+    list_filter = ('status', 'role')
+    search_fields = ('code', 'email', 'role__code', 'role__name')
+    readonly_fields = ('uuid', 'created_at', 'updated_at', 'submitted_at', 'approved_at')

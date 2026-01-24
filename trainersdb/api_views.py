@@ -1,6 +1,8 @@
 from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from django.utils.decorators import method_decorator
 from rbac.permissions import HasRBACPermission
@@ -36,6 +38,7 @@ class TrainerViewSet(viewsets.ModelViewSet):
         'location': ['exact'],
         'is_active': ['exact'],
         'years_of_experience': ['gte', 'lte'],
+        'stack': ['exact'],
     }
     
     search_fields = ['name', 'email', 'phone_number', 'trainer_id', 'stack__course_name']
@@ -55,3 +58,16 @@ class TrainerViewSet(viewsets.ModelViewSet):
             self.required_permission = 'TRAINER_VIEW'
             
         return super().get_permissions()
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, HasRBACPermission])
+def trainers_by_course(request, course_id):
+    qs = Trainer.objects.filter(stack__id=course_id, is_active=True).distinct().select_related('user')
+    data = []
+    for t in qs:
+        display_name = t.name
+        if not display_name and t.user:
+            display_name = getattr(t.user, 'name', '') or t.user.email
+        data.append({'id': t.id, 'trainer_id': t.trainer_id, 'name': display_name})
+    return Response(data)
+trainers_by_course.required_permission = 'TRAINER_VIEW'
