@@ -10,7 +10,13 @@ psycopg2-binary
 python-dotenv
 
 pandas
+numpy
 openpyxl
+matplotlib
+yfinance
+reportlab
+tqdm
+stripe
 
 pycountry
 phonenumbers
