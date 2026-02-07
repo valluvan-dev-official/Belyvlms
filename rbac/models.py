@@ -10,6 +10,7 @@ class Permission(models.Model):
     code = models.CharField(max_length=100, unique=True, help_text="Unique permission code (e.g., USER_CREATE)")
     name = models.CharField(max_length=255, help_text="Human-readable name")
     module = models.CharField(max_length=100, help_text="Logical grouping (e.g., User Management)")
+    description = models.TextField(null=True, blank=True, help_text="Detailed description for tooltips.")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -22,6 +22,7 @@ from .api_views import (
     OnboardRequestActionView,
     PublicOnboardRequestSchemaView,
     PublicOnboardRequestSubmitView,
+    CheckPermissionsView,
 )
 
 router = DefaultRouter()
@@ -36,6 +37,7 @@ urlpatterns = [
     # Auth Endpoints
     path('auth/login/', RBACTokenObtainPairView.as_view(), name='rbac-login'),
     path('auth/switch-role/', SwitchRoleView.as_view(), name='rbac-switch-role'),
+    path('auth/check-permissions/', CheckPermissionsView.as_view(), name='rbac-check-permissions'),
     path('auth/me/', UserPermissionsView.as_view(), name='rbac-me'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/verify/', TokenVerifyView.as_view(), name='token_verify'),

@@ -66,7 +66,7 @@ class RoleProfileConfigViewSet(viewsets.ModelViewSet):
     queryset = RoleProfileConfig.objects.all()
     serializer_class = RoleProfileConfigSerializer
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'PROFILE_CONFIG_MANAGE' # Needs to be added to RBAC seeds
+    required_permission = 'PROFILE_CONFIG_MANAGE'
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
@@ -117,7 +117,7 @@ class ProfileFieldDefinitionViewSet(viewsets.ModelViewSet):
 ))
 class OnboardingView(views.APIView):
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'USER_ONBOARD'
+    required_permission = 'USER_MANAGEMENT_CREATE'
 
     def post(self, request):
         serializer = OnboardingSerializer(data=request.data)
@@ -169,7 +169,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'USER_VIEW'
+    required_permission = 'USER_MANAGEMENT_VIEW'
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['role', 'is_active', 'email']
 

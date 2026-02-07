@@ -26,8 +26,8 @@ urlpatterns = [
 
     # --- Enterprise RBAC Routes (Secure Zone) ---
     # These URLs are protected by the dynamic Permission System
-    path('secure/list/', rbac_required('STUDENT_VIEW')(student_list), name='rbac_student_list'),
-    path('secure/create/', rbac_required('STUDENT_CREATE')(create_student), name='rbac_create_student'),
-    path('secure/<str:student_id>/update/', rbac_required('STUDENT_UPDATE')(update_student), name='rbac_update_student'),
-    path('secure/<str:student_id>/delete/', rbac_required('STUDENT_DELETE')(delete_student), name='rbac_delete_student'),
+    path('secure/list/', rbac_required('STUDENT_MANAGEMENT_VIEW')(student_list), name='rbac_student_list'),
+    path('secure/create/', rbac_required('USER_MANAGEMENT_CREATE')(create_student), name='rbac_create_student'),
+    path('secure/<str:student_id>/update/', rbac_required('USER_MANAGEMENT_EDIT')(update_student), name='rbac_update_student'),
+    path('secure/<str:student_id>/delete/', rbac_required('USER_MANAGEMENT_DELETE')(delete_student), name='rbac_delete_student'),
 ]

@@ -55,6 +55,10 @@ INSTALLED_APPS = [
     # 'access_control',
     'rbac',
     'profiles',
+    'dashboard',
+    'ui_engine',
+    'audit',
+    'locations',
 ]
 
 MIDDLEWARE = [

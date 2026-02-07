@@ -14,6 +14,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from .models import Role, Permission, RolePermission, UserRole, OnboardRequest
+from .utils import get_user_permissions
 from .serializers import (
     RoleSerializer, 
     PermissionSerializer, 
@@ -49,7 +50,18 @@ class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.annotate(user_count=Count('users')).all()
     serializer_class = RoleSerializer
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'RBAC_ROLE_MANAGE' 
+    
+    @property
+    def required_permission(self):
+        if self.action in ['list', 'retrieve']:
+            return 'ROLE_VIEW'
+        elif self.action == 'create':
+            return 'ROLE_CREATE'
+        elif self.action in ['update', 'partial_update']:
+            return 'ROLE_UPDATE'
+        elif self.action == 'destroy':
+            return 'ROLE_DELETE'
+        return 'ROLE_VIEW'
 
     def get_queryset(self):
         return Role.objects.annotate(user_count=Count('users')).all()
@@ -69,6 +81,61 @@ class RoleViewSet(viewsets.ModelViewSet):
     def set_permissions(self, request, pk=None):
         role = self.get_object()
         permission_codes = request.data.get('permissions', [])
+        
+        # --- STRICT INVARIANT VALIDATION START ---
+        # Rule: ACTION permissions (Create, Edit, Delete, Export, Assign) REQUIRE the corresponding VIEW permission.
+        
+        # 1. Identify "Action" suffixes and their required "View" equivalent
+        # Convention: MODULE_RESOURCE_ACTION -> MODULE_RESOURCE_VIEW
+        # We assume standard naming: *_CREATE, *_EDIT, *_DELETE, *_EXPORT, *_ASSIGN_ROLE, *_APPROVE, *_REJECT
+        
+        # Helper to extract base resource from an action code
+        def get_base_resource(code):
+            # Known suffixes to strip
+            suffixes = ['_CREATE', '_EDIT', '_DELETE', '_EXPORT', '_ASSIGN_ROLE', '_APPROVE', '_REJECT', '_UPDATE']
+            for suffix in suffixes:
+                if code.endswith(suffix):
+                    return code[:-len(suffix)] # e.g. USER_MANAGEMENT
+            return None
+
+        # 2. Build Set of Requested Permissions for fast lookup
+        requested_set = set(permission_codes)
+        
+        # 3. Check for Violations
+        violations = []
+        for code in permission_codes:
+            base_resource = get_base_resource(code)
+            if base_resource:
+                # Construct the required VIEW permission code
+                # Convention: If the action is USER_MANAGEMENT_CREATE, the view is USER_MANAGEMENT_VIEW
+                # Edge Case: Sometimes suffixes differ slightly, but our Master List is consistent.
+                required_view = f"{base_resource}_VIEW"
+                
+                # Check if this VIEW permission exists in our system (to avoid false positives on non-standard codes)
+                # We can't check DB every time, but we can assume if we calculated it, it SHOULD exist.
+                # Ideally, we only enforce if the user *requested* an action but missed the view.
+                
+                # Optimization: Only enforce if the VIEW permission is NOT in the requested set
+                if required_view not in requested_set:
+                    # One exception: If the permission itself IS the view (handled by suffix check returning None)
+                    # or if the permission scheme is non-standard.
+                    # To be safe, we only flag if we are sure.
+                    
+                    # Let's verify if 'required_view' is a valid permission in the request? No, we check if it's missing.
+                    # We should probably verify if 'required_view' is a valid permission code in the DB? 
+                    # For performance, we can skip DB check and just assume the naming convention holds.
+                    # If USER_MANAGEMENT_CREATE exists, USER_MANAGEMENT_VIEW must exist.
+                    
+                    violations.append(f"{code} requires {required_view}")
+
+        if violations:
+            return Response({
+                "status": "error",
+                "message": "Strict Permission Invariant Violation: Action permissions cannot exist without View permissions.",
+                "violations": violations
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        # --- STRICT INVARIANT VALIDATION END ---
         
         # 1. Fetch Permission Objects
         perms = Permission.objects.filter(code__in=permission_codes)
@@ -102,7 +169,18 @@ class PermissionViewSet(viewsets.ModelViewSet):
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'RBAC_PERMISSION_MANAGE'
+    
+    @property
+    def required_permission(self):
+        if self.action in ['list', 'retrieve']:
+            return 'PERMISSION_LIBRARY_VIEW'
+        elif self.action == 'create':
+            return 'PERMISSION_LIBRARY_CREATE'
+        elif self.action in ['update', 'partial_update']:
+            return 'PERMISSION_LIBRARY_UPDATE'
+        elif self.action == 'destroy':
+            return 'PERMISSION_LIBRARY_DELETE'
+        return 'PERMISSION_LIBRARY_VIEW'
 
 @method_decorator(name='get', decorator=swagger_auto_schema(tags=["RBAC Assignments"]))
 @method_decorator(name='post', decorator=swagger_auto_schema(tags=["RBAC Assignments"], request_body=AssignPermissionSerializer, consumes=['multipart/form-data']))
@@ -113,7 +191,12 @@ class RolePermissionView(generics.ListCreateAPIView):
     queryset = RolePermission.objects.all()
     serializer_class = RolePermissionSerializer
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'RBAC_PERMISSION_ASSIGN'
+    
+    @property
+    def required_permission(self):
+        if self.request.method == 'GET':
+            return 'ACCESS_CONTROL_MATRIX_VIEW'
+        return 'ACCESS_CONTROL_MATRIX_EDIT' # Editing Matrix = Editing Role Permissions
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -168,52 +251,14 @@ class UserPermissionsView(views.APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        from .services import build_auth_context
+        
         user = request.user
         active_role_code = request.headers.get('X-Active-Role', None)
         
-        data = {
-            'user': {
-                'id': user.id,
-                'email': user.email,
-                'name': user.name if hasattr(user, 'name') else '',
-                'is_superuser': user.is_superuser,
-                'is_staff': user.is_staff
-            },
-            'active_role': None,
-            'available_roles': [],
-            'permissions': get_user_permissions(user, active_role_code)
-        }
-
-        # Populate available roles and determine active role
-        user_roles = UserRole.objects.select_related('role').filter(user=user)
+        # Use centralized service to build response
+        data = build_auth_context(user, active_role_code)
         
-        for ur in user_roles:
-            role_data = {
-                'code': ur.role.code,
-                'name': ur.role.name
-            }
-            data['available_roles'].append(role_data)
-            
-            # Determine active role object
-            if active_role_code and ur.role.code == active_role_code:
-                data['active_role'] = role_data
-        
-        # Fallback: If no active role specified or found, default to the first one
-        if not data['active_role'] and user_roles.exists():
-            first_ur = user_roles.first()
-            data['active_role'] = {
-                'code': first_ur.role.code,
-                'name': first_ur.role.name
-            }
-            # Re-fetch permissions for the default role if we fell back
-            if active_role_code is None: 
-                 # Note: get_user_permissions already defaults to first role if None is passed
-                 # But if active_role_code was passed but invalid, we might want to reset permissions?
-                 # Current get_user_permissions implementation:
-                 # if active_role_code provided -> get that role. If not found -> returns empty [] or crashes?
-                 # Let's check utils.py again.
-                 pass
-
         return Response(data)
 
 @method_decorator(name='post', decorator=swagger_auto_schema(tags=["RBAC Assignments"], request_body=UserRoleSerializer, consumes=['multipart/form-data']))
@@ -224,7 +269,7 @@ class UserRoleAssignmentView(generics.CreateAPIView):
     queryset = UserRole.objects.all()
     serializer_class = UserRoleSerializer
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'RBAC_USER_ASSIGN'
+    required_permission = 'ROLE_CREATE' # Assigning role is a sensitive op
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -264,39 +309,43 @@ class SwitchRoleView(views.APIView):
         responses={200: "New Access Token + Permissions"}
     )
     def post(self, request):
+        from .services import build_auth_context
+        
         role_code = request.data.get('role_code')
         user = request.user
         
-        # 1. Verify User has this Role
-        try:
-            target_ur = UserRole.objects.select_related('role').get(user=user, role__code=role_code)
-        except UserRole.DoesNotExist:
-            return Response(
+        # 1. Use Service to validate and build context
+        # Passing role_code as active_role_code forces the service to validate it
+        auth_context = build_auth_context(user, active_role_code=role_code)
+        
+        # 2. Check if the switch was successful (if active_role matches requested)
+        active_role_data = auth_context.get('active_role')
+        if not active_role_data or active_role_data['code'] != role_code:
+             return Response(
                 {"status": "error", "message": f"You do not have the role: {role_code}"}, 
                 status=status.HTTP_403_FORBIDDEN
             )
+
+        # 3. Update Last Active Role Persistence
+        if hasattr(user, 'last_active_role'):
+            user.last_active_role = role_code
+            user.save(update_fields=['last_active_role'])
             
-        # 2. Generate New Token with Active Role
+        # 4. Generate New Token
         refresh = RefreshToken.for_user(user)
-        # Add custom claims if needed, e.g. refresh['active_role'] = role_code
         
-        # 3. Get Permissions for this specific role
-        permissions = Permission.objects.filter(role_permissions__role=target_ur.role).values_list('code', flat=True)
+        # 5. Merge Token into Context
+        auth_context['access'] = str(refresh.access_token)
+        auth_context['refresh'] = str(refresh)
         
-        return Response({
-            'access': str(refresh.access_token),
-            'refresh': str(refresh), # Optional: Rotate refresh token too if needed
-            'active_role': {
-                'code': target_ur.role.code,
-                'name': target_ur.role.name
-            },
-            'permissions': list(permissions)
-        })
+        return Response(auth_context)
 
 @method_decorator(name='get', decorator=swagger_auto_schema(tags=["RBAC Core"]))
 class RoleImpactSummaryView(views.APIView):
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'RBAC_ROLE_IMPACT'
+    required_permission = 'ROLE_VIEW'
+
+
 
     def get(self, request, pk):
         role = get_object_or_404(Role, pk=pk)
@@ -310,10 +359,93 @@ class RoleImpactSummaryView(views.APIView):
             "modules": modules
         })
 
+class UserPermissionsView(views.APIView):
+    """
+    API to get current user's context: Active Role, Permissions, etc.
+    """
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        tags=["RBAC Auth"],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'user': openapi.Schema(type=openapi.TYPE_OBJECT),
+                    'active_role': openapi.Schema(type=openapi.TYPE_STRING),
+                    'permissions': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING)),
+                }
+            )
+        }
+    )
+    def get(self, request):
+        from .services import build_auth_context
+        
+        user = request.user
+        active_role_code = request.headers.get('X-Active-Role', None)
+        
+        # Use centralized service to build response
+        # This ensures /me returns the EXACT same structure as /login
+        data = build_auth_context(user, active_role_code)
+        
+        return Response(data)
+
+class CheckPermissionsView(views.APIView):
+    """
+    API to Bulk Check Permissions.
+    Accepts a list of permission codes and returns a boolean map.
+    Respects X-Active-Role header.
+    """
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        tags=["RBAC Auth"],
+        operation_description="Check if user has specific permissions (Bulk)",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'permissions': openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(type=openapi.TYPE_STRING),
+                    description="List of permission codes to check"
+                )
+            },
+            required=['permissions']
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                additionalProperties=openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                description="Map of permission_code -> boolean"
+            )
+        }
+    )
+    def post(self, request):
+        requested_perms = request.data.get('permissions', [])
+        if not isinstance(requested_perms, list):
+            return Response(
+                {"status": "error", "message": "'permissions' must be a list"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        user = request.user
+        active_role_code = request.headers.get('X-Active-Role', None)
+        
+        # Optimization: Get all user permissions once
+        # get_user_permissions handles Superuser bypass and Caching internally.
+        user_perms = set(get_user_permissions(user, active_role_code))
+        
+        result = {
+            perm: perm in user_perms
+            for perm in requested_perms
+        }
+        
+        return Response(result)
+
 @method_decorator(name='post', decorator=swagger_auto_schema(tags=["RBAC Core"]))
 class RoleDeactivateView(views.APIView):
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'RBAC_ROLE_DEACTIVATE'
+    required_permission = 'ACCESS_CONTROL_ROLE_DELETE'
 
     def post(self, request, pk):
         role = get_object_or_404(Role, pk=pk)
@@ -383,7 +515,8 @@ class OnboardingDropdownsView(views.APIView):
     Fetches Courses, Trainers, Consultants, Sources, and Batches in a single call.
     Optimized for payload size and frontend performance.
     """
-    permission_classes = [IsAuthenticated] # Or specific RBAC permission if needed
+    permission_classes = [IsAuthenticated, HasRBACPermission] 
+    required_permission = 'USER_MANAGEMENT_VIEW'
 
     @swagger_auto_schema(
         tags=["Onboarding"],
@@ -450,7 +583,7 @@ class UserListView(generics.ListAPIView):
     """
     serializer_class = UserCreateSerializer
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'USER_VIEW'
+    required_permission = 'USER_MANAGEMENT_VIEW'
 
     def get_queryset(self):
         from accounts.models import CustomUser
@@ -466,7 +599,7 @@ class UserListView(generics.ListAPIView):
 
 class UserCreateView(views.APIView):
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'RBAC_USER_CREATE'
+    required_permission = 'USER_MANAGEMENT_CREATE'
 
     @swagger_auto_schema(
         tags=["RBAC Management"],
@@ -504,7 +637,7 @@ import uuid
 ))
 class OnboardRequestCreateView(views.APIView):
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'USER_ONBOARD'
+    required_permission = 'USER_MANAGEMENT_CREATE'
 
     def post(self, request):
         try:
@@ -571,7 +704,7 @@ class OnboardRequestCreateView(views.APIView):
 class OnboardRequestListView(generics.ListAPIView):
     serializer_class = OnboardRequestSerializer
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'USER_ONBOARD'
+    required_permission = 'USER_MANAGEMENT_VIEW'
 
     @swagger_auto_schema(
         tags=["User Onboarding"],
@@ -609,7 +742,12 @@ class OnboardRequestListView(generics.ListAPIView):
 
 class OnboardRequestDetailView(views.APIView):
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'USER_ONBOARD'
+    
+    @property
+    def required_permission(self):
+        if self.request.method == 'PATCH':
+            return 'USER_MANAGEMENT_EDIT'
+        return ['USER_MANAGEMENT_VIEW', 'USER_MANAGEMENT_EDIT']
 
     @swagger_auto_schema(
         tags=["User Onboarding"],
@@ -662,7 +800,7 @@ class OnboardRequestDetailView(views.APIView):
 
 class OnboardRequestOnboardView(views.APIView):
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'USER_ONBOARD'
+    required_permission = 'USER_MANAGEMENT_CREATE'
 
     @swagger_auto_schema(
         tags=["User Onboarding"],
@@ -711,7 +849,7 @@ class OnboardRequestOnboardView(views.APIView):
 
 class OnboardRequestActionView(views.APIView):
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'USER_ONBOARD'
+    required_permission = 'USER_MANAGEMENT_EDIT'
 
     @swagger_auto_schema(
         tags=["User Onboarding"],

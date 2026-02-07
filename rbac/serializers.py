@@ -21,60 +21,24 @@ class RoleSerializer(serializers.ModelSerializer):
 class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Permission
-        fields = ['id', 'code', 'name', 'module']
+        fields = ['id', 'code', 'name', 'module', 'description']
 
 class RBACTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         
-        # Add User Role and Permissions to response
         user = self.user
         
-        # 1. Fetch ALL Roles for the user (Multi-Role Support)
-        user_roles = UserRole.objects.select_related('role').filter(user=user)
+        # Use Centralized Auth Context Service
+        # We don't pass active_role_code here, so it falls back to persistence or default
+        from .services import build_auth_context
+        auth_context = build_auth_context(user, active_role_code=None)
         
-        available_roles = []
-        for ur in user_roles:
-            available_roles.append({
-                'code': ur.role.code,
-                'name': ur.role.name
-            })
-            
-        data['available_roles'] = available_roles
+        # Merge context into response data
+        data.update(auth_context)
         
-        # 2. Determine Active Role (Default to first one or None)
-        # In a real enterprise app, user chooses role AFTER login.
-        # But for compatibility, we auto-select the first role if exists.
-        
-        active_role = None
-        permissions = []
-        
-        if user_roles.exists():
-            # Auto-select the first role as default active role
-            first_ur = user_roles.first()
-            active_role = {
-                'code': first_ur.role.code,
-                'name': first_ur.role.name
-            }
-            
-            # Get permissions for this ACTIVE role only
-            permissions = Permission.objects.filter(role_permissions__role=first_ur.role).values_list('code', flat=True)
-            
-            # Embed Role in Access Token (Optional but good for debug)
-            # Note: The actual enforcement happens via DB check in permissions.py
-            # But we can add it to token claims if needed.
-            
-        data['active_role'] = active_role
-        data['permissions'] = list(permissions)
+        # Add specific login flags
         data['must_change_password'] = getattr(user, 'must_change_password', False)
-            
-        data['user'] = {
-            'id': user.id,
-            'email': user.email,
-            'name': user.name if hasattr(user, 'name') else '',
-            'is_superuser': user.is_superuser,
-            'is_staff': user.is_staff
-        }
         
         return data
 

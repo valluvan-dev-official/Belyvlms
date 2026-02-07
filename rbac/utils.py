@@ -11,17 +11,10 @@ def get_user_permissions(user, active_role_code=None):
     if not user.is_authenticated:
         return []
 
-    # 1. Superuser Bypass (God Mode)
-    if user.is_superuser:
-        # Cache key for superuser (global)
-        su_cache_key = "rbac_perms_superuser"
-        cached_su = cache.get(su_cache_key)
-        if cached_su:
-            return cached_su
-            
-        all_perms = list(Permission.objects.values_list('code', flat=True))
-        cache.set(su_cache_key, all_perms, 60 * 60)
-        return all_perms
+    # 1. REMOVED SUPERUSER BYPASS (GOD MODE)
+    # Rationale: Enterprise RBAC requires all users, including admins, 
+    # to have explicit roles defined in the matrix.
+    # if user.is_superuser: ... (Removed)
 
     # 2. Fetch User's Role (Multi-Role Logic)
     # We don't cache the "User -> Role" mapping here to ensure instant revocation if user is removed from role.
@@ -63,8 +56,8 @@ def has_permission(user, permission_code, active_role_code=None):
     """
     Utility to check if a user has a specific permission.
     """
-    if user.is_superuser:
-        return True
+    # REMOVED SUPERUSER BYPASS
+    # if user.is_superuser: return True
 
     perms = get_user_permissions(user, active_role_code)
     return permission_code in perms

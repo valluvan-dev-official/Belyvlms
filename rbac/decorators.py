@@ -16,8 +16,10 @@ def rbac_required(permission_code):
                 return redirect('login')
 
             # Superuser bypass
-            if request.user.is_superuser:
-                return view_func(request, *args, **kwargs)
+            # REMOVED SUPERUSER BYPASS
+            # Rationale: All users must have explicit permissions in Enterprise RBAC
+            # if request.user.is_superuser:
+            #     return view_func(request, *args, **kwargs)
 
             # Check Permission
             has_permission = False
