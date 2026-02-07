@@ -88,3 +88,20 @@ class StudentSerializer(serializers.ModelSerializer):
         except:
             pass
         return []
+
+class StudentProfileUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Student Profile Updates by the Student (User).
+    Enforces strict Field Ownership: Admin fields are Read-Only.
+    """
+    class Meta:
+        model = Student
+        fields = [
+            'first_name', 'last_name', 'it_experience', 
+            'course_status', 'mode_of_class', 'week_type',
+            'course_id', 'trainer'
+        ]
+        read_only_fields = [
+            'course_status', 'mode_of_class', 'week_type',
+            'course_id', 'trainer'
+        ]

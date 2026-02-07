@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import home
+from .views import home, public_register
 
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -24,6 +24,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('', home, name='home'),
+    path('public/register', public_register, name='public-register'),
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')), 
     path('students/', include('studentsdb.urls')),
@@ -39,11 +40,17 @@ urlpatterns = [
     path('api/', include('batchdb.api_urls')),
     path('api/', include('trainersdb.api_urls')),
     path('api/', include('studentsdb.api_urls')),
+    path('api/', include('consultantdb.api_urls')),
+    path('api/', include('settingsdb.api_urls')),
 
     path('api/', include('tempDb.urls')),
     path('api/', include('accounts.api_urls')),
     path('api/rbac/', include('rbac.api_urls')),
+    path('api/dashboard/', include('dashboard.urls')),
+    path('api/ui/', include('ui_engine.urls')),
     path('api/profiles/', include('profiles.api_urls')),
+    path('api/', include('audit.api_urls')),
+    path('api/locations/', include('locations.urls')),
     # path('api/rbac/', include('access_control.urls')),
     # path('api/auth/login/', RBACTokenObtainPairView.as_view(), name='token_obtain_pair'),
     # path('api/auth/login/refresh/', RBACTokenRefreshView.as_view(), name='token_refresh'),

@@ -18,5 +18,7 @@ python-dateutil
 pyotp
 qrcode[pil]
 country_list
+Pillow
 
 openai
+requests

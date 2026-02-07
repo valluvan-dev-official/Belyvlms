@@ -7,10 +7,50 @@ from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rbac.permissions import HasRBACPermission
-from .models import RoleProfileConfig, ProfileFieldDefinition
-from .serializers import RoleProfileConfigSerializer, ProfileFieldDefinitionSerializer, OnboardingSerializer, UserSerializer
+from .models import RoleProfileConfig, ProfileFieldDefinition, GenericProfile
+from .serializers import RoleProfileConfigSerializer, ProfileFieldDefinitionSerializer, OnboardingSerializer, UserSerializer, GenericProfileSerializer, GenericProfileUpdateSerializer
 from .services import OnboardingService
 from accounts.models import CustomUser
+
+@method_decorator(name='get', decorator=swagger_auto_schema(
+    tags=["Generic Profile"],
+    operation_description="Get Current User's Generic Profile (if applicable)",
+    responses={200: GenericProfileSerializer()}
+))
+@method_decorator(name='put', decorator=swagger_auto_schema(
+    tags=["Generic Profile"],
+    operation_description="Update Generic Profile Data (JSON)",
+    request_body=GenericProfileUpdateSerializer,
+    responses={200: GenericProfileSerializer()}
+))
+class GenericProfileView(views.APIView):
+    """
+    Self-Service Endpoint for users with 'Generic Profiles'.
+    Allows them to View and Update their dynamic profile data.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            profile = GenericProfile.objects.get(user=request.user)
+            serializer = GenericProfileSerializer(profile)
+            return Response(serializer.data)
+        except GenericProfile.DoesNotExist:
+            return Response({"detail": "No Generic Profile found for this user."}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request):
+        serializer = GenericProfileUpdateSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        
+        # Save Data
+        profile = GenericProfile.objects.get(user=request.user)
+        # Merge or Replace? Let's Merge.
+        # If replace is needed, use serializer.validated_data['data'] directly.
+        # Here we merge to prevent data loss of other fields.
+        profile.data.update(serializer.validated_data['data'])
+        profile.save()
+        
+        return Response(GenericProfileSerializer(profile).data)
 
 @method_decorator(name='list', decorator=swagger_auto_schema(tags=["Profiles Config"]))
 @method_decorator(name='create', decorator=swagger_auto_schema(tags=["Profiles Config"]))
@@ -26,7 +66,7 @@ class RoleProfileConfigViewSet(viewsets.ModelViewSet):
     queryset = RoleProfileConfig.objects.all()
     serializer_class = RoleProfileConfigSerializer
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'PROFILE_CONFIG_MANAGE' # Needs to be added to RBAC seeds
+    required_permission = 'PROFILE_CONFIG_MANAGE'
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
@@ -77,7 +117,7 @@ class ProfileFieldDefinitionViewSet(viewsets.ModelViewSet):
 ))
 class OnboardingView(views.APIView):
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'USER_ONBOARD'
+    required_permission = 'USER_MANAGEMENT_CREATE'
 
     def post(self, request):
         serializer = OnboardingSerializer(data=request.data)
@@ -129,7 +169,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'USER_VIEW'
+    required_permission = 'USER_MANAGEMENT_VIEW'
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['role', 'is_active', 'email']
 

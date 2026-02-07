@@ -41,6 +41,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
+    must_change_password = models.BooleanField(default=False)
+    last_active_role = models.CharField(max_length=50, blank=True, null=True, help_text="Code of the last role the user accessed")
     totp_secret = models.CharField(max_length=100, blank=True, null=True)
 
     objects = CustomUserManager()

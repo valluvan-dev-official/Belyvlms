@@ -31,6 +31,9 @@ class Student(models.Model):
     alternative_phone = models.CharField(max_length=15, null=True, blank=True)
     email = models.EmailField(null=True)
     location = models.CharField(max_length=100, null=True, blank=True)
+    country = models.CharField(max_length=100, default="India", blank=True)
+    state = models.CharField(max_length=100, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
     
     # UG Details
     ugdegree = models.CharField(max_length=100, choices=DEGREE_CHOICES, null=True, blank=True)
@@ -95,10 +98,36 @@ class Student(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.student_id:
-            last_student = Student.objects.order_by('-id').first()
-            if last_student and last_student.student_id:
-                last_id = int(last_student.student_id.replace('BTR', ''))
-                self.student_id = f'BTR{last_id + 1:04d}'
-            else:
-                self.student_id = 'BTR0001'
+            from rbac.services import IDGeneratorService
+            self.student_id = IDGeneratorService.generate_next_id('Student', self.user)
         super().save(*args, **kwargs)
+
+class StudentProfessionalProfile(models.Model):
+    """
+    Dedicated model for storing deep professional details.
+    Separated from Student model to keep the core lightweight.
+    """
+    student = models.OneToOneField(Student, on_delete=models.CASCADE, related_name='professional_profile')
+    
+    # Primary Logic Flags
+    is_currently_employed = models.BooleanField(default=False)
+    has_prior_work_experience = models.BooleanField(default=False)
+    
+    # Structured JSON Blocks (Flexible & Scalable)
+    # 1. Current Employment (If is_currently_employed=True)
+    current_employment_details = models.JSONField(default=dict, blank=True, help_text="Company, Role, CTC, Notice Period, etc.")
+    
+    # 2. Prior Experience (If has_prior_work_experience=True)
+    prior_experience_details = models.JSONField(default=dict, blank=True, help_text="Previous Companies, Tenure, Gaps")
+    
+    # 3. Technical Experience (If has_prior_work_experience=True)
+    technical_experience_profile = models.JSONField(default=dict, blank=True, help_text="Skills, Projects, Complexity")
+    
+    # 4. Fresher Readiness (If has_prior_work_experience=False)
+    fresher_readiness_profile = models.JSONField(default=dict, blank=True, help_text="Internships, Certifications, Academic Projects")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Professional Profile: {self.student.student_id}"

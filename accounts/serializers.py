@@ -22,6 +22,25 @@ class CustomUserSerializer(serializers.ModelSerializer):
             user.save()
         return user
 
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # Fetch RBAC roles (fixes legacy role mismatch)
+        # The 'rbac_roles' relation comes from rbac.models.UserRole
+        rbac_entries = instance.rbac_roles.select_related('role').all()
+        
+        if rbac_entries:
+            # Use the first RBAC role as the primary display role
+            primary_role = rbac_entries[0].role
+            ret['role'] = primary_role.name  # Override legacy field
+            
+            # Add explicit roles list for multi-role support
+            ret['roles'] = [
+                {'code': entry.role.code, 'name': entry.role.name} 
+                for entry in rbac_entries
+            ]
+        
+        return ret
+
 class UserMeSerializer(CustomUserSerializer):
     class Meta(CustomUserSerializer.Meta):
         read_only_fields = CustomUserSerializer.Meta.read_only_fields + ['role', 'is_active', 'email']

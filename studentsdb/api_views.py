@@ -7,6 +7,8 @@ from rbac.permissions import HasRBACPermission
 from drf_yasg.utils import swagger_auto_schema
 from django.utils.decorators import method_decorator
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
@@ -26,7 +28,7 @@ class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all().order_by('-id')
     serializer_class = StudentSerializer
     permission_classes = [IsAuthenticated, HasRBACPermission]
-    required_permission = 'STUDENT_VIEW'
+    required_permission = 'STUDENT_MANAGEMENT_VIEW'
     pagination_class = StandardResultsSetPagination
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -45,13 +47,32 @@ class StudentViewSet(viewsets.ModelViewSet):
     ordering_fields = ['enrollment_date', 'student_id', 'first_name']
 
     def get_permissions(self):
-        if self.action in ['create']:
-            self.required_permission = 'STUDENT_CREATE'
+        """
+        Dynamic permission check based on action.
+        """
+        if self.action == 'list':
+             self.required_permission = 'STUDENT_MANAGEMENT_VIEW'
+        elif self.action == 'retrieve':
+             self.required_permission = 'STUDENT_MANAGEMENT_PROFILE_VIEW'
+        elif self.action == 'stats':
+             self.required_permission = 'STUDENT_MANAGEMENT_STATS_VIEW'
+        elif self.action == 'export':
+             self.required_permission = 'STUDENT_MANAGEMENT_EXPORT'
+        elif self.action == 'create':
+             self.required_permission = 'USER_MANAGEMENT_CREATE' # Fallback to User Mgmt
         elif self.action in ['update', 'partial_update']:
-            self.required_permission = 'STUDENT_UPDATE'
-        elif self.action in ['destroy']:
-            self.required_permission = 'STUDENT_DELETE'
+             self.required_permission = 'USER_MANAGEMENT_EDIT' # Fallback to User Mgmt
+        elif self.action == 'destroy':
+             self.required_permission = 'USER_MANAGEMENT_DELETE' # Fallback to User Mgmt
         else:
-            self.required_permission = 'STUDENT_VIEW'
+             self.required_permission = 'STUDENT_MANAGEMENT_VIEW'
             
         return super().get_permissions()
+
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        return Response({"status": "success", "message": "Stats endpoint"})
+
+    @action(detail=False, methods=['post'])
+    def export(self, request):
+        return Response({"status": "success", "message": "Export endpoint"})

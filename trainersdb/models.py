@@ -84,12 +84,8 @@ class Trainer(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.trainer_id:
-            last_trainer = Trainer.objects.order_by('-id').first()
-            if last_trainer and last_trainer.trainer_id:
-                last_id = int(last_trainer.trainer_id.replace('TRN', ''))
-                self.trainer_id = f'TRN{last_id + 1:04d}'
-            else:
-                self.trainer_id = 'TRN0001'
+            from rbac.services import IDGeneratorService
+            self.trainer_id = IDGeneratorService.generate_next_id('Trainer', self.user)
 
         # Auto-populate mode_of_delivery and availability
         if self.timing_slots:

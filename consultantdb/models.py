@@ -20,12 +20,8 @@ class Consultant(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.consultant_id:
-            last_consultant = Consultant.objects.order_by('id').last()
-            if last_consultant and last_consultant.consultant_id and last_consultant.consultant_id.startswith('CON'):
-                last_id = int(last_consultant.consultant_id.replace('CON', ''))
-                self.consultant_id = f'CON{last_id + 1:04d}'
-            else:
-                self.consultant_id = 'CON0001'
+            from rbac.services import IDGeneratorService
+            self.consultant_id = IDGeneratorService.generate_next_id('Consultant')
         super().save(*args, **kwargs)
 
 class ConsultantProfile(models.Model):
