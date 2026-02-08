@@ -212,7 +212,7 @@ DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER')
 
 # # for developement
 
-# DEBUG = True
+DEBUG = True
 # ALLOWED_HOSTS = ['*']
 
 # DATABASES = {
