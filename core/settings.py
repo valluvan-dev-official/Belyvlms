@@ -213,14 +213,18 @@ DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER')
 # # for developement
 
 DEBUG = True
-ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['*']
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 
 
+# hello world
+
+# WElcome to the Eorls
+# print("Hello World!")
