@@ -4,6 +4,7 @@ import time
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from locations.models import Country
+from tqdm import tqdm
 
 class Command(BaseCommand):
     help = 'Enrich Country master table with phone_code and emoji metadata from JSON dataset'
@@ -20,24 +21,33 @@ class Command(BaseCommand):
         start_time = time.time()
         file_path = options['file']
 
+        self.stdout.write(self.style.SUCCESS(f'--- Starting Metadata Enrichment ---'))
+        
+        # Strategy: Prefer JSON, but if missing/slow, we could use libs (future enhancement)
+        # For now, we optimize JSON processing.
+
         if not os.path.exists(file_path):
             self.stdout.write(self.style.ERROR(f'File not found: {file_path}'))
             return
 
-        self.stdout.write(self.style.SUCCESS(f'Reading file: {file_path}...'))
+        self.stdout.write(f'Reading file: {file_path} (Size: {os.path.getsize(file_path)/1024/1024:.2f} MB)...')
         
         try:
+            # Optimization: 45MB is small enough for modern RAM.
+            # If this is slow, it's likely the decoding.
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
         except json.JSONDecodeError as e:
             self.stdout.write(self.style.ERROR(f'Invalid JSON file: {e}'))
             return
+        except MemoryError:
+             self.stdout.write(self.style.ERROR('Memory Error: JSON file too large.'))
+             return
 
         self.stdout.write(self.style.SUCCESS(f'Loaded {len(data)} records from JSON.'))
 
         # Phase 1: Build In-Memory Country Map
         self.stdout.write('Phase 1: Building In-Memory Country Map...')
-        # Fetch only necessary fields to minimize memory footprint
         existing_countries = Country.objects.all()
         country_map = {c.iso_code_2: c for c in existing_countries}
         
@@ -49,24 +59,19 @@ class Command(BaseCommand):
         countries_to_update = []
         updated_count = 0
         skipped_count = 0
-        missing_iso_count = 0
-
-        # We will track IDs to ensure no duplicates in update list (though map handles uniqueness of objects)
-        # Using a set to track which ISOs we have processed in this run if needed, 
-        # but since we iterate JSON, we just check against the map.
         
-        for entry in data:
+        # Safe Progress Bar (Works even if tqdm is missing or fails)
+        try:
+            from tqdm import tqdm
+            iterator = tqdm(data, desc="Processing Countries", unit="country")
+        except ImportError:
+            self.stdout.write("tqdm not installed. Running without progress bar...")
+            iterator = data
+
+        for entry in iterator:
             iso2 = entry.get('iso2')
             
-            if not iso2:
-                skipped_count += 1
-                continue
-
-            if iso2 not in country_map:
-                # Log missing ISO codes as per requirements
-                # self.stdout.write(self.style.WARNING(f'Skipping unknown ISO code: {iso2}')) 
-                # (Commented out to avoid cluttering output, or we can count them)
-                missing_iso_count += 1
+            if not iso2 or iso2 not in country_map:
                 skipped_count += 1
                 continue
 
@@ -76,11 +81,15 @@ class Command(BaseCommand):
             phone_code = entry.get('phone_code') or entry.get('phonecode')
             emoji = entry.get('emoji')
 
+            # Normalization
+            if phone_code and str(phone_code).startswith('+'):
+                 phone_code = str(phone_code)[1:]
+
             # Check if update is needed
             needs_update = False
             
-            if phone_code and country.phone_code != phone_code:
-                country.phone_code = phone_code
+            if phone_code and country.phone_code != str(phone_code):
+                country.phone_code = str(phone_code)
                 needs_update = True
             
             if emoji and country.emoji != emoji:
@@ -95,20 +104,37 @@ class Command(BaseCommand):
         self.stdout.write('Phase 3: Executing Bulk Update...')
         
         if countries_to_update:
-            # Update only the specified fields
-            Country.objects.bulk_update(countries_to_update, ['phone_code', 'emoji'])
-            self.stdout.write(self.style.SUCCESS(f'Successfully enriched {len(countries_to_update)} country records.'))
+            # Batch updates to avoid DB timeouts if list is huge
+            batch_size = 500
+            total_updates = len(countries_to_update)
+            
+            try:
+                from tqdm import tqdm
+                pbar = tqdm(total=total_updates, desc="Updating DB", unit="rec")
+                has_tqdm = True
+            except ImportError:
+                has_tqdm = False
+                self.stdout.write(f"Updating {total_updates} records...")
+
+            for i in range(0, total_updates, batch_size):
+                batch = countries_to_update[i:i + batch_size]
+                Country.objects.bulk_update(batch, ['phone_code', 'emoji'])
+                if has_tqdm:
+                    pbar.update(len(batch))
+            
+            if has_tqdm:
+                pbar.close()
+            
+            self.stdout.write(self.style.SUCCESS(f'Successfully enriched {updated_count} country records.'))
         else:
             self.stdout.write(self.style.SUCCESS('No records needed updating. All metadata is up to date.'))
 
         # Reporting
-        end_time = time.time()
-        execution_time = end_time - start_time
+        execution_time = time.time() - start_time
         
         self.stdout.write(self.style.SUCCESS('\n--- Execution Summary ---'))
-        self.stdout.write(f'Total JSON Records Processed: {len(data)}')
-        self.stdout.write(f'Total Database Records Updated: {updated_count}')
-        self.stdout.write(f'Total Skipped (Unknown ISO/No ISO): {skipped_count}')
-        self.stdout.write(f'   - Missing in DB (Unknown ISO): {missing_iso_count}')
-        self.stdout.write(f'Execution Time: {execution_time:.2f} seconds')
+        self.stdout.write(f'Total JSON Records: {len(data)}')
+        self.stdout.write(f'Updated: {updated_count}')
+        self.stdout.write(f'Skipped: {skipped_count}')
+        self.stdout.write(f'Time: {execution_time:.2f}s')
         self.stdout.write('-------------------------')

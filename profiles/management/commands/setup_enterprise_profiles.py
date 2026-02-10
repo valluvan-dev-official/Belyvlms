@@ -69,8 +69,9 @@ class Command(BaseCommand):
             ('permanent_address', 'Permanent Address', 'TEXT'),
         ]
 
+        valid_field_names = []
         for field_name, label, ftype in default_fields:
-            ProfileFieldDefinition.objects.get_or_create(
+            field, created = ProfileFieldDefinition.objects.update_or_create(
                 config=po_config,
                 name=field_name,
                 defaults={
@@ -79,6 +80,13 @@ class Command(BaseCommand):
                     'is_required': True
                 }
             )
+            valid_field_names.append(field_name)
+        
+        # STRICT SYNC: Delete fields not in valid_field_names for this config
+        deleted_count, _ = ProfileFieldDefinition.objects.filter(config=po_config).exclude(name__in=valid_field_names).delete()
+        if deleted_count > 0:
+             self.stdout.write(self.style.WARNING(f"Removed {deleted_count} stale fields from {po_role.name}"))
+
         self.stdout.write(self.style.SUCCESS(f"Added default enterprise fields to {po_role.name}"))
 
         self.stdout.write(self.style.SUCCESS("All Enterprise Profiles Configured Successfully!"))
