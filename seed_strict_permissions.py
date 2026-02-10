@@ -55,6 +55,13 @@ def seed_permissions():
         'DASHBOARD_VIEW_GLOBAL': ('View Dashboard', 'Dashboard', 'Access global dashboard metrics'),
         'DASHBOARD_WIDGET_GROWTH_VIEW': ('View Growth Trends Widget', 'Dashboard', 'Allows viewing the Growth Trends chart on the dashboard'),
 
+        # RBAC UI Permissions (Merged from seed_ui_permissions.py)
+        'VIEW_ACCESS_CONTROL': ('View Access Control Sidebar', 'RBAC UI', 'View the Access Control sidebar menu'),
+        'VIEW_MATRIX': ('View Permission Matrix Tab', 'RBAC UI', 'View the Permission Matrix tab'),
+        'VIEW_ROLE_MANAGEMENT': ('View Role Management Tab', 'RBAC UI', 'View the Role Management tab'),
+        'VIEW_PERMISSION_LIBRARY': ('View Permission Library Tab', 'RBAC UI', 'View the Permission Library tab'),
+        'MANAGE_ROLES': ('Manage Roles (Create/Edit)', 'RBAC UI', 'Allow creating and editing roles'),
+
         # Profile Configuration (Dynamic Profiles)
         'PROFILE_CONFIG_VIEW': ('View Profile Config', 'Profile Config', 'View role profile configurations'),
         'PROFILE_CONFIG_MANAGE': ('Manage Profile Config', 'Profile Config', 'Manage role profile configurations'),
@@ -80,13 +87,42 @@ def seed_permissions():
                         updated_count += 1
                     f.write(f"{'Created' if created else 'Updated'}: {code}\n")
                     print(f"{'Created' if created else 'Updated'}: {code}")
+
+        # DELETE STALE PERMISSIONS (Strict Sync)
+        # Any permission in DB that is NOT in permissions_map must be deleted
+        all_db_codes = set(Permission.objects.values_list('code', flat=True))
+        defined_codes = set(permissions_map.keys())
+        stale_codes = all_db_codes - defined_codes
+        
+        if stale_codes:
+            delete_count = len(stale_codes)
+            with open('seed_log.txt', 'a') as f:
+                f.write(f"Found {delete_count} stale permissions not in code. Deleting...\n")
+                print(f"Found {delete_count} stale permissions not in code. Deleting...")
+                Permission.objects.filter(code__in=stale_codes).delete()
+                f.write("Deleted stale permissions.\n")
+                print("Deleted stale permissions.")
     
     with open('seed_log.txt', 'a') as f:
         f.write(f"Finished. Created: {created_count}, Updated: {updated_count}\n")
 
     # Assign all permissions to Super Admin (SAM)
     try:
-        sa_role = Role.objects.get(code='SAM')
+        sa_role, created = Role.objects.get_or_create(
+            code='SAM',
+            defaults={'name': 'Super Admin', 'is_active': True}
+        )
+        if created:
+             print("Created Super Admin (SAM) role.")
+
+        # Ensure Admin (ADM) role exists too
+        admin_role, created = Role.objects.get_or_create(
+            code='ADM',
+            defaults={'name': 'Admin', 'is_active': True}
+        )
+        if created:
+             print("Created Admin (ADM) role.")
+
         with open('seed_log.txt', 'a') as f:
             f.write(f"Assigning all permissions to {sa_role.name}...\n")
         

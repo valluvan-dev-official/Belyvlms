@@ -90,6 +90,7 @@ class Command(BaseCommand):
             ('ADM', admin_config)
         ]
 
+        valid_roles = []
         for role_code, config in configs:
             try:
                 role = Role.objects.get(code=role_code)
@@ -103,5 +104,11 @@ class Command(BaseCommand):
                 )
                 action = "Created" if created else "Updated"
                 self.stdout.write(self.style.SUCCESS(f"{action} config for {role.name} ({role_code})"))
+                valid_roles.append(role_code)
             except Role.DoesNotExist:
                 self.stdout.write(self.style.WARNING(f"Role {role_code} not found. Skipping."))
+        
+        # STRICT SYNC: Remove UI Defaults for roles not in the list
+        deleted_count, _ = RoleUIDefault.objects.filter(module=dashboard_module).exclude(role__code__in=valid_roles).delete()
+        if deleted_count > 0:
+             self.stdout.write(self.style.WARNING(f"Removed {deleted_count} stale UI defaults"))
