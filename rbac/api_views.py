@@ -546,10 +546,8 @@ class OnboardingDropdownsView(views.APIView):
         trainers_qs = Trainer.objects.select_related('user').filter(user__isnull=False)
         trainers = []
         for t in trainers_qs:
-            name = f"{t.user.first_name} {t.user.last_name}".strip()
-            if not name:
-                name = t.user.email # Fallback
-            trainers.append({'id': t.id, 'name': name})
+            display_name = t.name or getattr(t.user, 'name', '') or t.user.email
+            trainers.append({'id': t.id, 'name': display_name})
             
         # 3. Fetch Consultants
         consultants = Consultant.objects.values('id', 'name', 'consultant_id').order_by('name')
