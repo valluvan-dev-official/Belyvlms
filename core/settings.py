@@ -20,7 +20,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-g7ccbck23uiam(
 # --- PRODUCTION SETTINGS ---
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
-ALLOWED_HOSTS = (os.environ.get('ALLOWED_HOSTS') or ('*' if DEBUG else 'belyv.in')).split(',')
+ALLOWED_HOSTS = ['btrees.in', 'admin.btrees.in',"*"]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
@@ -128,10 +128,6 @@ SIMPLE_JWT = {
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 USE_X_FORWARDED_HOST = True
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
 
 
 
@@ -216,6 +212,8 @@ DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER')
 
 # # for developement
 
+DEBUG = True
+ALLOWED_HOSTS = ['*']
 
 # DATABASES = {
 #     'default': {
@@ -231,3 +229,11 @@ DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER')
 
 # WElcome to the Eorls
 # print("Hello World!")
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "https://belyv.in",
+]
+
+SESSION_COOKIE_DOMAIN = ".belyv.in"
+CSRF_COOKIE_DOMAIN = ".belyv.in"
