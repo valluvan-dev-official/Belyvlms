@@ -61,3 +61,10 @@ class OnboardRequestAdmin(admin.ModelAdmin):
     list_filter = ('status', 'role')
     search_fields = ('code', 'email', 'role__code', 'role__name')
     readonly_fields = ('uuid', 'created_at', 'updated_at', 'submitted_at', 'approved_at')
+    actions = ['drop_onboard_requests']
+
+    def drop_onboard_requests(self, request, queryset):
+        queryset.update(status='DROPPED')
+
+    def has_delete_permission(self, request, obj=None):
+        return False
