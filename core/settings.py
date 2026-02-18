@@ -88,6 +88,7 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "authorization",
+    "x-active-role",
 ]
 
 CORS_ALLOW_METHODS = [
