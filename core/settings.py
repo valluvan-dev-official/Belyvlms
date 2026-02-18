@@ -83,7 +83,7 @@ from corsheaders.defaults import default_headers
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "https://belyv.in",
+    "https://belyv.in","http://localhost:5173",
 ]
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
