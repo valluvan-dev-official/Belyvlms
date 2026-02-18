@@ -75,10 +75,44 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_HEADERS = ['*']
-CORS_ALLOW_METHODS = ['*']
+# CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_HEADERS = ['*']
+# CORS_ALLOW_METHODS = ['*']
+from corsheaders.defaults import default_headers
+
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "https://belyv.in",
+]
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "authorization",
+]
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
+
+
+
+CORS_ALLOW_CREDENTIALS = True
+
+
+# CORS_ALLOW_CREDENTIALS = True
+
+# CORS_ALLOWED_ORIGINS = [
+#     "https://belyv.in",
+# ]
+
+# SESSION_COOKIE_DOMAIN = ".belyv.in"
+# CSRF_COOKIE_DOMAIN = ".belyv.in"
+
 
 
 # CSRF_TRUSTED_ORIGINS = [
@@ -229,11 +263,3 @@ ALLOWED_HOSTS = ['*']
 
 # WElcome to the Eorls
 # print("Hello World!")
-CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOWED_ORIGINS = [
-    "https://belyv.in",
-]
-
-SESSION_COOKIE_DOMAIN = ".belyv.in"
-CSRF_COOKIE_DOMAIN = ".belyv.in"
